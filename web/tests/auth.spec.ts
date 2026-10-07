@@ -1,0 +1,40 @@
+import {test,expect} from '@playwright/test';
+import {randomBytes} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
+const root=resolve(fileURLToPath(new URL('../..',import.meta.url)));
+const testState=process.env.FVPN_TEST_STATE;
+if(!testState)throw new Error('Auth E2E must run with playwright.auth.config.ts');
+test('invite → own empty cabinet → reload → logout → password login',async({page})=>{
+ const login='test-'+randomBytes(8).toString('hex');const password=randomBytes(24).toString('base64url');
+ const data=JSON.parse(execFileSync(resolve(root,'build',process.platform==='win32'?'vpnctl.exe':'vpnctl'),['auth-invite','--root',testState,'--login',login,'--name','Тестовый пользователь'],{encoding:'utf8'}));
+ await page.goto('/');await expect(page.getByRole('heading',{name:'Вход в кабинет'})).toBeVisible();
+ await page.getByRole('button',{name:'У меня приглашение'}).click();await page.getByLabel('Код приглашения').fill(data.token);await page.getByLabel('Пароль',{exact:true}).fill(password);await page.getByLabel('Повторите пароль').fill(password);
+ await page.getByRole('button',{name:'Активировать кабинет'}).click();await expect(page.getByRole('heading',{name:'Устройств пока нет'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ const cookies=await page.context().cookies();const session=cookies.find(c=>c.name==='__Host-fvpn_session');expect(!!session?.secure&&!!session?.httpOnly&&session?.sameSite==='Lax').toBe(true);
+ expect(await page.evaluate(()=>localStorage.length)).toBe(0);
+ await page.reload();await expect(page.getByRole('heading',{name:'Устройств пока нет'})).toBeVisible();
+ await page.getByRole('button',{name:'Выйти',exact:true}).click();await expect(page.getByRole('heading',{name:'Вход в кабинет'})).toBeVisible();
+ await page.getByRole('button',{name:'У меня приглашение'}).click();await page.getByLabel('Код приглашения').fill(data.token);await page.getByLabel('Пароль',{exact:true}).fill(password);await page.getByLabel('Повторите пароль').fill(password);await page.getByRole('button',{name:'Активировать кабинет'}).click();await expect(page.getByRole('alert')).toContainText('Не удалось войти');
+ await page.getByRole('button',{name:'Вход',exact:true}).click();await page.getByLabel('Логин').fill(login);await page.getByLabel('Пароль',{exact:true}).fill(password);await page.getByRole('button',{name:'Войти',exact:true}).click();await expect(page.getByRole('heading',{name:'Устройств пока нет'})).toBeVisible();
+ const response=await page.request.get('/api/v1/admin/overview');expect(response.status()).toBe(404);
+ await page.getByRole('button',{name:'Выйти',exact:true}).click();
+});
+
+test('recovery revokes old login, changes password and rejects code replay',async({page})=>{
+ const login='recover-'+randomBytes(8).toString('hex');const oldPassword=randomBytes(24).toString('base64url');const newPassword=randomBytes(24).toString('base64url');
+ const ctl=(command:string)=>JSON.parse(execFileSync(resolve(root,'build',process.platform==='win32'?'vpnctl.exe':'vpnctl'),[command,'--root',testState,'--login',login,'--name','Проверка восстановления'],{encoding:'utf8'}));
+ const invite=ctl('auth-invite');
+ await page.goto('/');await page.getByRole('button',{name:'У меня приглашение'}).click();await page.getByLabel('Код приглашения').fill(invite.token);await page.getByLabel('Пароль',{exact:true}).fill(oldPassword);await page.getByLabel('Повторите пароль').fill(oldPassword);await page.getByRole('button',{name:'Активировать кабинет'}).click();await expect(page.getByRole('heading',{name:'Устройств пока нет'})).toBeVisible();
+ const recovery=ctl('auth-recovery');await page.reload();await expect(page.getByRole('heading',{name:'Вход в кабинет'})).toBeVisible();
+ await page.getByLabel('Логин').fill(login);await page.getByLabel('Пароль',{exact:true}).fill(oldPassword);await page.getByRole('button',{name:'Войти',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Не удалось войти');
+ await page.getByRole('button',{name:'Забыли пароль?'}).click();await expect(page.getByRole('heading',{name:'Восстановить доступ'})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.getByLabel('Код восстановления').fill(recovery.token);await page.getByLabel('Новый пароль',{exact:true}).fill(newPassword);await page.getByLabel('Повторите пароль').fill(oldPassword);await page.getByRole('button',{name:'Сохранить новый пароль'}).click();await expect(page.getByRole('alert')).toContainText('Пароли не совпадают');
+ await page.getByLabel('Повторите пароль').fill(newPassword);await page.getByRole('button',{name:'Сохранить новый пароль'}).click();await expect(page.getByRole('status')).toContainText('Пароль обновлён');await expect(page.getByRole('heading',{name:'Вход в кабинет'})).toBeVisible();
+ expect((await page.request.get('/api/v1/me')).status()).toBe(401);
+ await page.getByLabel('Логин').fill(login);await page.getByLabel('Пароль',{exact:true}).fill(newPassword);await page.getByRole('button',{name:'Войти',exact:true}).click();await expect(page.getByRole('heading',{name:'Устройств пока нет'})).toBeVisible();
+ await page.getByRole('button',{name:'Выйти',exact:true}).click();await page.getByRole('button',{name:'Забыли пароль?'}).click();await page.getByLabel('Код восстановления').fill(recovery.token);await page.getByLabel('Новый пароль',{exact:true}).fill(newPassword);await page.getByLabel('Повторите пароль').fill(newPassword);await page.getByRole('button',{name:'Сохранить новый пароль'}).click();await expect(page.getByRole('alert')).toContainText('Не удалось восстановить доступ');
+ expect(await page.evaluate(()=>localStorage.length)).toBe(0);
+});

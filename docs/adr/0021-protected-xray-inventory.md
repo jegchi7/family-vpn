@@ -1,0 +1,19 @@
+# ADR-0021 · Защищённый Xray inventory
+
+Статус: принято для локального KUK-5, v0.23.0. Core/client/native acceptance открыта.
+
+v0.22 связывает runtime users Result с boot/netns и manual API/tag/tool expectations. Следующий необходимый контракт — происхождение полного ожидаемого manifest: CLI executable pin не удостоверяет responder, а произвольный config snapshot не является current runtime revision.
+
+Вводится единственный Linux read-only путь /etc/family-vpn/xray-inventory.json. Файл provisioned отдельно trusted operator из independently protected inventory согласованного стенда. Native observer/CLI не создают его, не принимают caller-supplied path и не извлекают ожидаемые pins/boot/netns автоматически из незнакомого host/tool.
+
+Version1 closed JSON (64KiB/16 targets): canonical nonzero boot UUID, namespace device/inode positive integers, expected kernel_release; per numeric-loopback API/tag — tool SHA/version, core SHA/version и config SHA. Это declarations/expectations. Parser rejects unknown/wrong-case/duplicate keys (including case aliases), missing/null fields, trailing JSON, invalid UTF8, nesting>8, unsupported versions, invalid targets/pins/versions, duplicate API/tag и inconsistent core/tool/config for one API. Actual compatibility/current revisions не выводятся из version labels.
+
+Target.InventorySHA256 — independently supplied exact-byte SHA256 whole manifest. CLI проверяет target/pin syntax до secret/state access, затем прочитывает protected manifest перед key/DB. На locked OS thread Observe проверяет environment и manifest перед первым, между и после двух API readbacks. Loader использует read-only openat relative checked directory descriptors, O_NOFOLLOW/O_CLOEXEC/O_NONBLOCK, root UID0 и отсутствие group/world write у каждого path component. File regular/non-executable/single-link и bounded. Metadata/inode/type/ownership/mode/size/mtime/ctime и path links сверяются до/после чтения; failure clears bytes. Permissions/metadata — защита от непривилегированного filesystem writer, не от hostile root, compromised kernel/host или namespace remapping. Регулярный inventory предполагается на trusted local filesystem; bound ограничивает bytes, не гарантирует прерываемость зависшего filesystem syscall.
+
+Immutable Result/Check и read-only storage recheck bind expected inventory pin вместе с существующими binding/exact bytes/target/scope/TTL60s. inventory_bound:true относится к manifest, проверенному во время исходного observer, не свежему read при store recheck и не lease. JSON не восстанавливает Result; snapshot zero Target/inventory_bound:false. No target values/digests/core labels/raw paths/errors in reports/DB/audit. No migration, profile remains pending, CLI blocked/exit1 and six full flags remain false. AWG target/reader/readiness/keyless diagnostics unchanged.
+
+Core identity/config/runtime revision/kernel/tool version claims внутри inventory остаются ожидаемыми, не observed. Реальный responding core/protected API provenance/current revision/REALITY transport/pinned client proof и audited transition ещё нужны. Native positive Xray tool/API/core/client path не выполнялся.
+
+Verification: actual local temporary-file descriptor tests (root-owned files, modes/links/FIFO/size/replacement/mutation/cancellation), separate synthetic foreign UID metadata policy test, closed parser/injected observer guards/CLI/store regressions. Current sandbox refuses chown to unmapped foreign UID; real foreign-UID filesystem acceptance remains separate. Original full criteria не закрываются этими тестами.
+
+Primary contracts inspected 06.10.2026: [Linux open/openat(2)](https://man7.org/linux/man-pages/man2/openat.2.html), [stat/fstat(2)](https://man7.org/linux/man-pages/man2/fstat.2.html). Descriptor-based validation constrains local file selection; это не signed remote-core attestation.

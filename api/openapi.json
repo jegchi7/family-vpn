@@ -1,0 +1,2334 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Family VPN — local authenticated stand",
+    "version": "0.13.0",
+    "description": "Implemented local demo, HTTPS user authentication and separate password/TOTP admin authentication. Read-only management views. No production bind or real VPN delivery."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080",
+      "description": "Portal demo"
+    },
+    {
+      "url": "http://127.0.0.1:8081",
+      "description": "Admin demo"
+    },
+    {
+      "url": "https://127.0.0.1:8443",
+      "description": "Local user auth"
+    },
+    {
+      "url": "https://127.0.0.1:9443",
+      "description": "Local admin TOTP"
+    }
+  ],
+  "paths": {
+    "/api/v1/me": {
+      "get": {
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "Read-only demo response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": " Local-auth requires user session; demo remains explicit fixed fixtures. Management views require the separate password/TOTP admin listener."
+      }
+    },
+    "/api/v1/devices": {
+      "get": {
+        "operationId": "devices",
+        "responses": {
+          "200": {
+            "description": "Read-only demo response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Device"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": " Local-auth requires user session; demo remains explicit fixed fixtures. Management views require the separate password/TOTP admin listener."
+      },
+      "post": {
+        "summary": "Local user device intent: /devices",
+        "description": "Authenticated owner only. Mutations require Origin/CSRF and JSON. Request creates two pending profile slots without keys or peer provisioning. Cancellation only before any configured profile/subscription; it is not a network revoke. request_id is owner-scoped idempotency, same payload required; expected_revision protects updates.",
+        "responses": {
+          "200": {
+            "description": "Current result (including idempotent replay)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Login required"
+          },
+          "403": {
+            "description": "Origin/CSRF rejected"
+          },
+          "404": {
+            "description": "Not found or not owned"
+          },
+          "409": {
+            "description": "Limit, revision, idempotency payload or state conflict"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{id}": {
+      "get": {
+        "operationId": "devices_by_id",
+        "responses": {
+          "200": {
+            "description": "Read-only demo response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": " Local-auth requires user session; demo remains explicit fixed fixtures. Management views require the separate password/TOTP admin listener."
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "operationId": "status",
+        "responses": {
+          "200": {
+            "description": "Read-only demo response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Health"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": " Local-auth requires user session; demo remains explicit fixed fixtures. Management views require the separate password/TOTP admin listener."
+      }
+    },
+    "/api/v1/instructions": {
+      "get": {
+        "operationId": "instructions",
+        "responses": {
+          "200": {
+            "description": "Read-only demo response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Instruction"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": " Local-auth requires user session; demo remains explicit fixed fixtures. Management views require the separate password/TOTP admin listener."
+      }
+    },
+    "/api/v1/admin/overview": {
+      "get": {
+        "operationId": "admin_overview",
+        "responses": {
+          "200": {
+            "description": "Read-only demo response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Available ONLY on the admin listener :8081. Local-auth requires user session; demo remains explicit fixed fixtures. Management views require the separate password/TOTP admin listener."
+      }
+    },
+    "/api/v1/profiles/{id}/download": {
+      "get": {
+        "operationId": "downloadDemoProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "txt"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "NONFUNCTIONAL demo note; no VPN keys",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Not found/not ready/unsupported format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": " Local-auth requires user session; demo remains explicit fixed fixtures. Management views require the separate password/TOTP admin listener."
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Process liveness; not VPN health",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "mode"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "demo"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "ready",
+        "responses": {
+          "200": {
+            "description": "Portal database responds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Store unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/bootstrap": {
+      "get": {
+        "operationId": "authBootstrap",
+        "x-mode": "local-auth",
+        "x-listener": "portal",
+        "description": "Local HTTPS only. Exact Host/Origin. POST requires JSON <=64 KiB and CSRF header. All responses no-store; no token in URL. No public registration.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthBootstrap"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry; fixed conservative 300"
+              }
+            }
+          },
+          "503": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "passwordLogin",
+        "x-mode": "local-auth",
+        "x-listener": "portal",
+        "description": "Local HTTPS only. Exact Host/Origin. POST requires JSON <=64 KiB and CSRF header. All responses no-store; no token in URL. No public registration.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry; fixed conservative 300"
+              }
+            }
+          },
+          "503": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordLogin"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "preauthCookie": [],
+            "csrfHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/invitations/accept": {
+      "post": {
+        "operationId": "acceptInvitation",
+        "x-mode": "local-auth",
+        "x-listener": "portal",
+        "description": "Local HTTPS only. Exact Host/Origin. POST requires JSON <=64 KiB and CSRF header. All responses no-store; no token in URL. No public registration.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry; fixed conservative 300"
+              }
+            }
+          },
+          "503": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitation"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "preauthCookie": [],
+            "csrfHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "x-mode": "local-auth",
+        "x-listener": "portal",
+        "description": "Local HTTPS only. Exact Host/Origin. POST requires JSON <=64 KiB and CSRF header. All responses no-store; no token in URL. No public registration.",
+        "responses": {
+          "204": {
+            "description": "Success, no body"
+          },
+          "400": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry; fixed conservative 300"
+              }
+            }
+          },
+          "503": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/session/touch": {
+      "post": {
+        "operationId": "touchSession",
+        "x-mode": "local-auth",
+        "x-listener": "portal",
+        "description": "Local HTTPS only. Exact Host/Origin. POST requires JSON <=64 KiB and CSRF header. All responses no-store; no token in URL. No public registration.",
+        "responses": {
+          "204": {
+            "description": "Success, no body"
+          },
+          "400": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry; fixed conservative 300"
+              }
+            }
+          },
+          "503": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/recovery/consume": {
+      "post": {
+        "operationId": "consumeRecovery",
+        "x-mode": "local-auth",
+        "x-listener": "portal",
+        "description": "Local HTTPS user-only recovery. Issuance is trusted CLI only and immediately disables old password and revokes sessions. This endpoint consumes a single-use recovery token, saves a new password, revokes remaining tokens/sessions, clears cookies and does not auto-login. Preauth CSRF, exact Origin, JSON <=64 KiB. No changes to VPN profiles.",
+        "responses": {
+          "400": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until retry; fixed conservative 300"
+              }
+            }
+          },
+          "503": {
+            "description": "Standard error; no credential reflection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Password changed; no session created. Cookies cleared; bootstrap and ordinary login required."
+          }
+        },
+        "parameters": [
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryProof"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "preauthCookie": [],
+            "csrfHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/admin/password": {
+      "post": {
+        "summary": "Closed local admin listener only: password",
+        "description": "HTTPS numeric loopback. Separate admin preauth cookie and X-CSRF-Token, exact Origin. Password creates a 3 minute challenge bound to preauth cookie; only TOTP creates an admin session (12h absolute / 30m idle). Never registered on public portal.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminChallenge"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication denied"
+          },
+          "403": {
+            "description": "Origin or CSRF rejected"
+          },
+          "429": {
+            "description": "Attempts limited"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/admin/totp": {
+      "post": {
+        "summary": "Closed local admin listener only: totp",
+        "description": "HTTPS numeric loopback. Separate admin preauth cookie and X-CSRF-Token, exact Origin. Password creates a 3 minute challenge bound to preauth cookie; only TOTP creates an admin session (12h absolute / 30m idle). Never registered on public portal.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminTOTP"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAuthResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication denied"
+          },
+          "403": {
+            "description": "Origin or CSRF rejected"
+          },
+          "429": {
+            "description": "Attempts limited"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/quota": {
+      "get": {
+        "summary": "Local user device intent: /devices/quota",
+        "description": "Authenticated owner only. Mutations require Origin/CSRF and JSON. Request creates two pending profile slots without keys or peer provisioning. Cancellation only before any configured profile/subscription; it is not a network revoke. request_id is owner-scoped idempotency, same payload required; expected_revision protects updates.",
+        "responses": {
+          "200": {
+            "description": "Current result (including idempotent replay)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceQuota"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Login required"
+          },
+          "403": {
+            "description": "Origin/CSRF rejected"
+          },
+          "404": {
+            "description": "Not found or not owned"
+          },
+          "409": {
+            "description": "Limit, revision, idempotency payload or state conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{id}/rename": {
+      "post": {
+        "summary": "Local user device intent: /devices/{id}/rename",
+        "description": "Authenticated owner only. Mutations require Origin/CSRF and JSON. Request creates two pending profile slots without keys or peer provisioning. Cancellation only before any configured profile/subscription; it is not a network revoke. request_id is owner-scoped idempotency, same payload required; expected_revision protects updates.",
+        "responses": {
+          "200": {
+            "description": "Current result (including idempotent replay)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Login required"
+          },
+          "403": {
+            "description": "Origin/CSRF rejected"
+          },
+          "404": {
+            "description": "Not found or not owned"
+          },
+          "409": {
+            "description": "Limit, revision, idempotency payload or state conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceRename"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{id}/cancel": {
+      "post": {
+        "summary": "Local user device intent: /devices/{id}/cancel",
+        "description": "Authenticated owner only. Mutations require Origin/CSRF and JSON. Request creates two pending profile slots without keys or peer provisioning. Cancellation only before any configured profile/subscription; it is not a network revoke. request_id is owner-scoped idempotency, same payload required; expected_revision protects updates.",
+        "responses": {
+          "200": {
+            "description": "Current result (including idempotent replay)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Login required"
+          },
+          "403": {
+            "description": "Origin/CSRF rejected"
+          },
+          "404": {
+            "description": "Not found or not owned"
+          },
+          "409": {
+            "description": "Limit, revision, idempotency payload or state conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceRevision"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "adminUsers",
+        "description": "Authenticated management listener only. Public and demo listeners do not expose this route. Read-only metadata with keyset pagination; no credentials, config, server keys or raw audit payloads.",
+        "security": [
+          {
+            "adminSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Sanitized API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/devices": {
+      "get": {
+        "operationId": "adminDevices",
+        "description": "Authenticated management listener only. Public and demo listeners do not expose this route. Read-only metadata with keyset pagination; no credentials, config, server keys or raw audit payloads.",
+        "security": [
+          {
+            "adminSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "pending",
+                "active",
+                "partial",
+                "revoking",
+                "revoked",
+                "error"
+              ],
+              "default": "pending"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDevicePage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Sanitized API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/audit": {
+      "get": {
+        "operationId": "adminAudit",
+        "description": "Authenticated management listener only. Public and demo listeners do not expose this route. Read-only metadata with keyset pagination; no credentials, config, server keys or raw audit payloads.",
+        "security": [
+          {
+            "adminSessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAuditEventPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Sanitized API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/instructions/{id}/offline": {
+      "get": {
+        "operationId": "offlineGuide",
+        "description": "Local authenticated catalog only. Downloads non-secret self-contained HTML. No personalized data/configs or third-party requests; client draft verification is separate from portal verification. No query params.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Offline HTML attachment",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Profile": {
+        "type": "object",
+        "required": [
+          "id",
+          "protocol",
+          "state",
+          "format"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "awg",
+              "reality"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "pending",
+              "revoking",
+              "revoked",
+              "error"
+            ]
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "txt",
+              "",
+              "vless-reality-uri",
+              "awg-3.1-conf"
+            ],
+            "description": "Empty means unselected; txt is demo only; vless-reality-uri and awg-3.1-conf are imported client data that remain pending until installation verification."
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "os",
+          "state",
+          "profiles",
+          "revision"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Profile"
+            }
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": [
+          "component",
+          "status",
+          "reason",
+          "measured_at",
+          "expires_at"
+        ],
+        "properties": {
+          "component": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "degraded",
+              "unavailable",
+              "unknown"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "measured_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Instruction": {
+        "type": "object",
+        "required": [
+          "id",
+          "os",
+          "title",
+          "verified",
+          "steps",
+          "offline_available"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "portal",
+              "vpn"
+            ]
+          },
+          "content_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date"
+          },
+          "verification_scope": {
+            "type": "string",
+            "enum": [
+              "none",
+              "portal",
+              "client"
+            ]
+          },
+          "app_id": {
+            "type": "string"
+          },
+          "app_version": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "awg",
+              "reality"
+            ]
+          },
+          "format": {
+            "type": "string"
+          },
+          "offline_available": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Me": {
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "role",
+          "mode",
+          "storage"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "demo",
+              "local-auth",
+              "local-admin"
+            ]
+          },
+          "storage": {
+            "type": "string",
+            "enum": [
+              "sqlite",
+              "memory-fixture"
+            ]
+          },
+          "csrf_token": {
+            "type": "string",
+            "description": "Only local-auth; held in JS memory, never localStorage."
+          }
+        }
+      },
+      "Overview": {
+        "type": "object",
+        "required": [
+          "mode",
+          "total_devices",
+          "mutations_enabled",
+          "message",
+          "components"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "demo",
+              "local-admin"
+            ]
+          },
+          "total_devices": {
+            "type": "integer"
+          },
+          "mutations_enabled": {
+            "type": "boolean",
+            "const": false
+          },
+          "message": {
+            "type": "string"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "request_id",
+              "retryable"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "request_id": {
+                "type": "string"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "AuthBootstrap": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "csrf_token"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "local-auth",
+              "local-admin"
+            ]
+          },
+          "csrf_token": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43
+          }
+        }
+      },
+      "AuthResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "login",
+          "display_name",
+          "role",
+          "expires_at",
+          "csrf_token"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "login": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "role": {
+            "const": "user"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "csrf_token": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43
+          }
+        }
+      },
+      "PasswordLogin": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "login",
+          "password"
+        ],
+        "properties": {
+          "login": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          }
+        }
+      },
+      "AcceptInvitation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "token",
+          "password"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 1024,
+            "description": "Minimum 12 Unicode characters, maximum 1024 UTF-8 bytes at runtime."
+          }
+        }
+      },
+      "RecoveryProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "token",
+          "new_password"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 1024,
+            "description": "At least 12 Unicode characters and at most 1024 UTF-8 bytes."
+          }
+        }
+      },
+      "AdminChallenge": {
+        "type": "object",
+        "required": [
+          "challenge",
+          "expires_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminTOTP": {
+        "type": "object",
+        "required": [
+          "challenge",
+          "code"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$"
+          }
+        }
+      },
+      "AdminAuthResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "login",
+          "display_name",
+          "role",
+          "expires_at",
+          "csrf_token"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "login": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "role": {
+            "const": "admin"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "csrf_token": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 43
+          }
+        }
+      },
+      "DeviceQuota": {
+        "type": "object",
+        "required": [
+          "limit",
+          "used",
+          "remaining"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remaining": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "DeviceRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "name",
+          "os"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android",
+              "windows",
+              "macos",
+              "linux",
+              "other"
+            ]
+          }
+        }
+      },
+      "DeviceRevision": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_revision"
+        ],
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "DeviceRename": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "expected_revision"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "AdminUser": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "login",
+          "display_name",
+          "state",
+          "device_limit",
+          "used_slots",
+          "invitation",
+          "recovery_pending"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "login": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "invited",
+              "active",
+              "disabled"
+            ]
+          },
+          "device_limit": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "used_slots": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "invitation": {
+            "type": "string",
+            "enum": [
+              "available",
+              "expired",
+              "used",
+              "none"
+            ]
+          },
+          "recovery_pending": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AdminProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "protocol",
+          "state",
+          "format",
+          "stored"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "awg",
+              "reality"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ready",
+              "revoking",
+              "revoked",
+              "error"
+            ]
+          },
+          "format": {
+            "type": "string"
+          },
+          "stored": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AdminDevice": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner_id",
+          "owner_login",
+          "name",
+          "os",
+          "state",
+          "revision",
+          "generation",
+          "profiles"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string"
+          },
+          "owner_login": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android",
+              "windows",
+              "macos",
+              "linux",
+              "other"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "partial",
+              "revoking",
+              "revoked",
+              "error"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminProfile"
+            }
+          }
+        }
+      },
+      "AdminAuditEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "actor_kind",
+          "object_id",
+          "outcome",
+          "time"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actor_kind": {
+            "type": "string",
+            "enum": [
+              "trusted-cli",
+              "user",
+              "unknown"
+            ]
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failed",
+              "unknown"
+            ]
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminUserPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AdminUser"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      },
+      "AdminDevicePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AdminDevice"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      },
+      "AdminAuditEventPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AdminAuditEvent"
+            }
+          },
+          "next_cursor": {
+            "type": "string",
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-fvpn_session"
+      },
+      "preauthCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-fvpn_preauth"
+      },
+      "csrfHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token"
+      },
+      "adminSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-fvpn_admin_session"
+      }
+    }
+  }
+}

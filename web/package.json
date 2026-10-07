@@ -1,0 +1,26 @@
+{
+  "name": "family-vpn-web",
+  "version": "0.24.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "api:generate": "openapi-typescript ../api/openapi.json -o src/lib/api.generated.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:auth": "playwright test --config playwright.auth.config.ts",
+    "test:e2e:admin": "playwright test --config playwright.admin.config.ts"
+  },
+  "dependencies": {
+    "svelte": "5.57.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "vite": "8.3.1",
+    "typescript": "5.9.3",
+    "svelte-check": "4.7.6",
+    "openapi-typescript": "7.13.0",
+    "@playwright/test": "1.63.0"
+  }
+}
