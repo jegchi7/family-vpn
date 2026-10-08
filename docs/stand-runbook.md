@@ -2,6 +2,14 @@
 
 Пакет предназначен для локального тестирования входа, устройств, сохранённых pending-профилей, инструкций и read-only admin. Это ещё не готовый VPN: native/core/client acceptance, audited readiness transition и выдача рабочих профилей остаются открытыми. Cross-build не подтверждает выполнение на Linux. Production deployment, публичный listener и pilot acceptance этим пакетом не реализуются.
 
+v0.28 дополнительно включает network-stand-runbook.md и trusted RU/network CLI. Они исполняются отдельно от HTTP UID, не открывают control DB/socket/root tools кабинету и не запускают cores. Native isolation/current client issuance/forwarding0 preservation ещё открыты.
+
+v0.25 также включает trusted CLI диагностику selected-peer handshake/counters и `profile-awg-session-runbook.md`. Она требует уже существующего согласованного AWG стенда и encrypted pending client profile; обычный кабинетный init их не создаёт. Result всегда blocked, runtime/core/client/DNS/routing acceptance и выдача остаются открытыми.
+
+v0.27 добавляет visual protocol/configuration status cards; connection/client остаются unknown до actual proof. Runbook protocol-status-runbook.md включён в runtime bundle. Footer показывает package version сборки. Для artifact delivery после ручного commit подготовлен GitHub prerelease/bootstrap из vpn-bootstrap-runbook.md; это не обновление/публикация работающего кабинета и не activation сети.
+
+v0.26 включает root-only operator bootstrap ядер и отдельное private Foreign staging: `vpn-bootstrap-runbook.md`. Его запускать отдельно от portal/admin UID; этим HTTP процессам не выдавать root/ядра/staging. Bootstrap не запускает VPN/network/service и не меняет DB/readiness. Runtime bundle содержит `scripts/bootstrap-foreign.sh`, source SDK на VPS не нужен.
+
 Стенд слушает только `https://127.0.0.1:8443` и `https://127.0.0.1:9443`. Открывать браузер на том же Linux компьютере. Использовать отдельные тестовые пароли. Не публиковать его через proxy/tunnel. Одно-UID локальный запуск не доказывает изоляцию production процессов.
 
 ## Собрать пакет на рабочем компьютере

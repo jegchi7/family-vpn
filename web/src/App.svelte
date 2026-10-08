@@ -1,5 +1,6 @@
 <script lang="ts">
  import { onMount } from 'svelte';
+ import {version as appVersion} from '../package.json';
  import AuthForm from './lib/AuthForm.svelte';
  import DeviceManager from './lib/DeviceManager.svelte';
  import AdminAuthForm from './lib/AdminAuthForm.svelte';
@@ -86,6 +87,6 @@
     <article class="guide"><h2>Компоненты</h2><ul>{#each overview.components as component}<li>{component}</li>{/each}</ul></article>
    {/if}
   {/if}
-  <footer>Семейный VPN <span>Итерация 11 · локальный стенд</span></footer>
+  <footer>Семейный VPN <span>v{appVersion} · локальный стенд</span></footer>
  </main>
 </div>

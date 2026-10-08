@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"familyvpn.local/platform/internal/adapters/fake"
 	"familyvpn.local/platform/internal/domain"
@@ -23,17 +24,28 @@ func OpenPortal(ctx context.Context, path string, readOnly bool) (*PortalStore, 
 }
 func (p *PortalStore) Backend() string { return "sqlite" }
 func (p *PortalStore) DevicesForOwner(ctx context.Context, owner string) ([]domain.Device, error) {
-	rows, e := p.db.QueryContext(ctx, `SELECT d.id,d.user_id,d.name,d.os,d.state,d.revision,p.id,p.protocol,p.state,p.format FROM devices d LEFT JOIN profiles p ON p.device_id=d.id AND p.generation=d.generation WHERE d.user_id=? ORDER BY d.id,p.protocol`, owner)
+	return p.devicesForOwnerAt(ctx, owner, time.Now().UTC())
+}
+func (p *PortalStore) devicesForOwnerAt(ctx context.Context, owner string, now time.Time) ([]domain.Device, error) {
+	tx, e := p.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if e != nil {
+		return nil, e
+	}
+	defer tx.Rollback()
+	rows, e := tx.QueryContext(ctx, `SELECT d.id,d.user_id,d.name,d.os,d.state,d.revision,d.generation,p.id,p.protocol,p.state,p.format,p.ciphertext IS NOT NULL FROM devices d LEFT JOIN profiles p ON p.device_id=d.id AND p.generation=d.generation WHERE d.user_id=? ORDER BY d.id,p.protocol`, owner)
 	if e != nil {
 		return nil, e
 	}
 	defer rows.Close()
 	out := []domain.Device{}
 	indices := map[string]int{}
+	bindings := []diagnosticBinding{}
 	for rows.Next() {
 		var d domain.Device
+		var generation int
+		var stored bool
 		var id, protocol, state, format *string
-		if e = rows.Scan(&d.ID, &d.OwnerID, &d.Name, &d.OS, &d.State, &d.Revision, &id, &protocol, &state, &format); e != nil {
+		if e = rows.Scan(&d.ID, &d.OwnerID, &d.Name, &d.OS, &d.State, &d.Revision, &generation, &id, &protocol, &state, &format, &stored); e != nil {
 			return nil, e
 		}
 		i, ok := indices[d.ID]
@@ -45,9 +57,28 @@ func (p *PortalStore) DevicesForOwner(ctx context.Context, owner string) ([]doma
 		}
 		if id != nil {
 			out[i].Profiles = append(out[i].Profiles, domain.Profile{ID: *id, Protocol: *protocol, State: *state, Format: *format})
+			bindings = append(bindings, diagnosticBinding{owner: owner, device: d.ID, profile: *id, protocol: *protocol, format: *format, deviceState: d.State, profileState: *state, generation: generation, revision: d.Revision, stored: stored})
 		}
 	}
-	return out, rows.Err()
+	e = rows.Err()
+	rows.Close()
+	if e != nil {
+		return nil, e
+	}
+	k := 0
+	for i := range out {
+		for j := range out[i].Profiles {
+			out[i].Profiles[j].Diagnostics, e = profileDiagnosticsTx(ctx, tx, bindings[k], now)
+			if e != nil {
+				return nil, e
+			}
+			k++
+		}
+	}
+	if e = tx.Commit(); e != nil {
+		return nil, e
+	}
+	return out, nil
 }
 func (p *PortalStore) ProfileForOwner(ctx context.Context, owner, id string) (domain.Profile, bool, error) {
 	devices, e := p.DevicesForOwner(ctx, owner)

@@ -1,6 +1,10 @@
-# Family VPN · итерация 24 · v0.24.0
+# Family VPN · итерация 28 · v0.28.0
 
-v0.24 исправляет замечания code review: AWG format в OpenAPI/pending UI, отозванные invite/recovery statuses, fractional expiry, аудит отмены и SQLite paths на Windows. Добавлены проверка TLS/frontend перед local-auth запуском и trusted `stand-check`. Переносимый Linux комплект кабинета: `npm run release:linux`, инструкция `docs/stand-runbook.md`. Он подходит для отдельного локального стенда кабинета; рабочая выдача VPN и acceptance M1/G1 ещё открыты. Актуальные результаты и ограничения проверок: `docs/iteration-24.md`.
+v0.28 добавляет private RU REALITY ingress через loopback SOCKS/relay sing-box на Foreign и закрытый IPv4 `vpn-data` kernel guard. Trusted `network-plan/prepare/apply/check` отделены от HTTP и требуют независимых helper pins/boot/netns/topology; применение читает установленные правила до activation и сохраняет защиту при ошибке. Cores автоматически не запускаются, клиентская привязка/выдача и Linux/Android acceptance ещё открыты. При выключенном host forwarding apply блокируется до изменения сети. Инструкция: `docs/network-stand-runbook.md`; отчёт: `docs/iteration-28.md`. Это локальная реализация, не проверенный deploy.
+
+v0.27 согласует версии генераторов с pinned VPN cores и добавляет безопасные карточки состояния протоколов в ЛК и админку: конфигурация/сверка/TTL отдельно от подключения и клиента. HTTP читает только portal metadata; новых probes, ключей или control/socket доступа нет. Live connection пока «Нет данных». Добавлены commit-bound GitHub prerelease build и root bootstrap для RU/Foreign без Go/Node на VPS; после ручного commit владельца требуется зелёный Actions run. Ни одно ядро/сервис/сеть автоматически не активируется. Отчёт `docs/iteration-27.md`; статусы `docs/protocol-status-runbook.md`; команды `docs/vpn-bootstrap-runbook.md`. M1/G1 и реальный Android→RU→Foreign round-trip открыты.
+
+v0.26 добавляет operator-run установку закреплённых Xray/sing-box/Hysteria binaries и private Foreign REALITY staging: `core-plan`, `core-install`, `core-status`, `foreign-init/check/status`. По умолчанию dry-run; установка/генерация только Linux root `--apply`. Из runtime bundle: `sudo ./scripts/bootstrap-foreign.sh --apply`. Инструкция: `docs/vpn-bootstrap-runbook.md`; результаты и ограничения: `docs/iteration-26.md`. Ядра не запускаются, сеть не меняется, AWG install и реальный Android→RU→Foreign путь пока не приняты. Рабочая выдача VPN и acceptance M1/G1 ещё открыты. Существующая AWG session диагностика сохранена: `docs/profile-awg-session-runbook.md`. Комплект кабинета: `npm run release:linux`, `docs/stand-runbook.md`.
 
 Go + Svelte кабинет с SQLite и работающим **локальным пользовательским входом**: одноразовое приглашение → пароль → серверная сессия → свои устройства. Пользователь может создать заявку на устройство, выбрать ОС, переименовать и отменить её до выдачи доступа. Квоты и данные сохраняются в SQLite. Одноразовое восстановление через trusted CLI и перевыпуск приглашений также работают. Добавлен отдельный локальный вход администратора по паролю и TOTP. Есть зашифрованное хранилище клиентских профилей и trusted CLI ключей. Добавлен trusted CLI импорта ограниченного VLESS/REALITY URI с dry-run/apply. Добавлены versioned инструкции кабинета для шести вариантов ОС и скачиваемые автономные HTML-памятки. Совместимость VPN-клиентов пока помечена draft. Выдача рабочих VPN-конфигов, passkey, recovery codes, обмен шлюзов и production deploy пока не реализованы. Есть отдельный synthetic agent/queue stand: это проверка метаданных, не управление VPN.
 
@@ -95,7 +99,7 @@ npm run test:e2e:admin
 
 ## Документация и структура
 
-- `docs/iteration-24.md`: выполненное и проверки; `docs/vpn-platform-backlog-v1.0.md` — единый актуальный реестр статусов.
+- `docs/iteration-28.md`: выполненное и проверки; `docs/vpn-platform-backlog-v1.0.md` — единый актуальный реестр статусов.
 - `docs/auth-runbook.md`: пошаговый локальный вход; `docs/storage-runbook.md`: прежний persistence demo.
 - `docs/next-iteration.md`: ближайшие задачи; усиления auth отложены по решению владельца, приоритет — устройства/конфиги.
 - `internal/auth`, `internal/adminauth`, `internal/store`, `internal/httpapi`: password/session logic, SQL transactions, HTTP boundary.
@@ -134,7 +138,7 @@ M1-02 частично реализован; следующий срез — nat
 
 v0.16: `profile-readiness` даёт keyless read-only report current target и причины блокировки. Проверяются owner/device/generation/revision, последняя observation metadata, TTL60s, stale/future/conflict/snapshot scope; старое совпадение не скрывает свежий conflict. Команда не загружает ключ или client bytes и не выполняет readiness transition. Ready/client/secret verification false; diagnostic report имеет status:blocked и exit1. Runbook: `docs/profile-readiness-runbook.md`; report: `docs/iteration-16.md`. Схемы6/4/1 без миграции.
 
-Current задачи ведутся в [Linear «Впн»](https://linear.app/kukin/project/vpn-d7991a20e59b), следующий срез [KUK-5](https://linear.app/kukin/issue/KUK-5/dev-08-m1-02-confirm-installed-access-flow-end-to-end). Это заменяет прежнюю запись о недоступности Linear в историческом абзаце v0.15. Canonical snapshot1.19 сохраняет оригинальные63 criteria; v0.24 обновлён локально, последний проверенный online sync относится к v0.23. KUK-5 In Progress, native/client/readiness transition и G1 открыты; KUK-6/7 delivery ждут KUK-5.
+Current задачи ведутся в [Linear «Впн»](https://linear.app/kukin/project/vpn-d7991a20e59b), следующий срез [KUK-5](https://linear.app/kukin/issue/KUK-5/dev-08-m1-02-confirm-installed-access-flow-end-to-end). Это заменяет прежнюю запись о недоступности Linear в историческом абзаце v0.15. Canonical snapshot1.23 сохраняет оригинальные63 criteria; v0.28 обновлён локально, последний проверенный online sync относится к v0.23. KUK-5 In Progress, native/client/readiness transition и G1 открыты; KUK-6/7 delivery ждут KUK-5.
 
 ## Корректность сверки AWG
 

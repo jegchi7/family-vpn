@@ -160,9 +160,9 @@ export function buildRelease(args = process.argv.slice(2)) {
   if (!/^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$/.test(version)) throw new Error('Invalid release version');
   // Frontend building/checks are deliberately separate; never rebuild dist while browsers use it.
   const files = collectFrontend(resolve(workspace, 'web', 'dist'));
-  for (const path of ['scripts/admin-credentials.py', 'docs/stand-runbook.md']) {
+  for (const path of ['scripts/admin-credentials.py', 'scripts/bootstrap-foreign.sh', 'docs/stand-runbook.md', 'docs/profile-awg-session-runbook.md', 'docs/vpn-bootstrap-runbook.md', 'docs/protocol-status-runbook.md', 'docs/network-stand-runbook.md']) {
     checkedFile(resolve(workspace, path));
-    files.push({path, mode: path.endsWith('.py') ? 0o755 : 0o644, bytes: readFileSync(resolve(workspace, path))});
+    files.push({path, mode: /\.(py|sh)$/.test(path) ? 0o755 : 0o644, bytes: readFileSync(resolve(workspace, path))});
   }
   const destination = outputDirectory();
   const prefix = `family-vpn-v${version}-linux-${arch}`;

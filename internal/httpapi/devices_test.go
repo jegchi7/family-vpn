@@ -74,6 +74,22 @@ func TestDeviceHTTPBoundary(t *testing.T) {
 	if e = json.Unmarshal(w.Body.Bytes(), &d); e != nil {
 		t.Fatal(e)
 	}
+	for _, profile := range d.Profiles {
+		if profile.Diagnostics == nil || profile.Diagnostics.Connection != "unknown" || profile.Diagnostics.Configuration != "unchecked" || profile.Diagnostics.ClientVerification != "unchecked" || profile.Diagnostics.Source != "none" {
+			t.Fatal("request invented protocol/session verification")
+		}
+	}
+	listed := request("GET", "/api/v1/devices", nil, alice, "", "")
+	check(listed, 200)
+	if !strings.Contains(listed.Body.String(), `"diagnostics"`) || !strings.Contains(listed.Body.String(), d.ID) {
+		t.Fatal("owner diagnostics missing")
+	}
+	listed = request("GET", "/api/v1/devices", nil, bob, "", "")
+	check(listed, 200)
+	if strings.Contains(listed.Body.String(), d.ID) || strings.Contains(listed.Body.String(), `"diagnostics"`) {
+		t.Fatal("diagnostics crossed owner boundary")
+	}
+	check(request("GET", "/api/v1/admin/devices", nil, alice, "", ""), 404)
 	for _, id := range []string{d.ID, "missing"} {
 		check(request("POST", "/api/v1/devices/"+id+"/rename", map[string]any{"name": "new", "expected_revision": 1}, bob, origin, bob.CSRF), 404)
 		check(request("POST", "/api/v1/devices/"+id+"/cancel", map[string]int{"expected_revision": 1}, bob, origin, bob.CSRF), 404)

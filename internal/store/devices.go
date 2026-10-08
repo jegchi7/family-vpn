@@ -24,7 +24,8 @@ func (p *PortalStore) DeviceQuota(ctx context.Context, owner string) (domain.Dev
 }
 func deviceFromTx(ctx context.Context, tx *sql.Tx, owner, id string) (domain.Device, error) {
 	var d domain.Device
-	e := tx.QueryRowContext(ctx, "SELECT id,user_id,name,os,state,revision FROM devices WHERE id=? AND user_id=?", id, owner).Scan(&d.ID, &d.OwnerID, &d.Name, &d.OS, &d.State, &d.Revision)
+	var generation int
+	e := tx.QueryRowContext(ctx, "SELECT id,user_id,name,os,state,revision,generation FROM devices WHERE id=? AND user_id=?", id, owner).Scan(&d.ID, &d.OwnerID, &d.Name, &d.OS, &d.State, &d.Revision, &generation)
 	if errors.Is(e, sql.ErrNoRows) {
 		e = ErrNotFound
 	}
@@ -32,19 +33,34 @@ func deviceFromTx(ctx context.Context, tx *sql.Tx, owner, id string) (domain.Dev
 		return d, e
 	}
 	d.Profiles = []domain.Profile{}
-	rows, e := tx.QueryContext(ctx, "SELECT p.id,p.protocol,p.state,p.format FROM profiles p JOIN devices d ON d.id=p.device_id WHERE d.id=? AND d.user_id=? AND p.generation=d.generation ORDER BY p.protocol", id, owner)
+	rows, e := tx.QueryContext(ctx, "SELECT p.id,p.protocol,p.state,p.format,p.ciphertext IS NOT NULL FROM profiles p JOIN devices d ON d.id=p.device_id WHERE d.id=? AND d.user_id=? AND p.generation=d.generation ORDER BY p.protocol", id, owner)
 	if e != nil {
 		return d, e
 	}
 	defer rows.Close()
+	bindings := []diagnosticBinding{}
 	for rows.Next() {
 		var v domain.Profile
-		if e = rows.Scan(&v.ID, &v.Protocol, &v.State, &v.Format); e != nil {
+		var stored bool
+		if e = rows.Scan(&v.ID, &v.Protocol, &v.State, &v.Format, &stored); e != nil {
 			return d, e
 		}
 		d.Profiles = append(d.Profiles, v)
+		bindings = append(bindings, diagnosticBinding{owner: owner, device: id, profile: v.ID, protocol: v.Protocol, format: v.Format, deviceState: d.State, profileState: v.State, generation: generation, revision: d.Revision, stored: stored})
 	}
-	return d, rows.Err()
+	e = rows.Err()
+	rows.Close()
+	if e != nil {
+		return d, e
+	}
+	now := time.Now().UTC()
+	for i := range d.Profiles {
+		d.Profiles[i].Diagnostics, e = profileDiagnosticsTx(ctx, tx, bindings[i], now)
+		if e != nil {
+			return d, e
+		}
+	}
+	return d, nil
 }
 
 // Lock the owner before checking quotas or mutating devices; concurrent requests serialize across DB handles.

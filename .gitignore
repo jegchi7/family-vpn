@@ -25,3 +25,6 @@
 *.sqlite-journal
 *.sqlite3-journal
 *.zip
+
+__pycache__/
+*.pyc

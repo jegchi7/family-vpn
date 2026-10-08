@@ -1509,6 +1509,9 @@
               "awg-3.1-conf"
             ],
             "description": "Empty means unselected; txt is demo only; vless-reality-uri and awg-3.1-conf are imported client data that remain pending until installation verification."
+          },
+          "diagnostics": {
+            "$ref": "#/components/schemas/ProfileDiagnostics"
           }
         }
       },
@@ -2133,6 +2136,9 @@
           },
           "stored": {
             "type": "boolean"
+          },
+          "diagnostics": {
+            "$ref": "#/components/schemas/ProfileDiagnostics"
           }
         }
       },
@@ -2304,6 +2310,59 @@
           "next_cursor": {
             "type": "string",
             "maxLength": 256
+          }
+        }
+      },
+      "ProfileDiagnostics": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Read-only portal metadata projection. Configuration comparison alone never attests a live connection, client compatibility, actual peer installation, readiness or permission to download. Stored AWG observation expires after 60 seconds. No network/core calls or control/key access.",
+        "required": [
+          "connection",
+          "configuration",
+          "source",
+          "clientVerification"
+        ],
+        "properties": {
+          "connection": {
+            "type": "string",
+            "enum": [
+              "unknown"
+            ]
+          },
+          "configuration": {
+            "type": "string",
+            "enum": [
+              "unchecked",
+              "stored",
+              "matched",
+              "conflict",
+              "expired",
+              "stale"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "none",
+              "snapshot",
+              "native_readback"
+            ]
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Canonical UTC timestamp of the stored comparison; only emitted together with expiresAt."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "clientVerification": {
+            "type": "string",
+            "enum": [
+              "unchecked"
+            ]
           }
         }
       }

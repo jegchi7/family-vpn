@@ -1,6 +1,7 @@
 <script lang="ts">
  import {onMount} from 'svelte';
  import {api} from './api';
+ import ProfileDiagnostics from './ProfileDiagnostics.svelte';
  import type {components} from './api.generated';
  let {onrefresh}:{onrefresh:()=>Promise<void>}=$props();
  let view=$state('devices');let filter=$state('pending');let busy=$state(false);let error=$state('');let cursor=$state('');let page=$state(1);
@@ -31,6 +32,7 @@
  <div class="admin-toolbar">
   {#if view==='devices'}<label>Состояние устройства <select bind:value={filter} disabled={busy} onchange={()=>load()}>{#each ['pending','all','active','partial','revoking','revoked','error'] as value}<option {value}>{states[value]}</option>{/each}</select></label>{/if}
   <button disabled={busy} onclick={()=>load()}>Обновить список</button>
+  {#if view==='devices'}<span class="refresh-note">Обновляет статусы и результаты сверок</span>{/if}
  </div>
  {#if busy}<p role="status">Читаем данные…</p>{/if}
  {#if error}<div class="error" role="alert"><p>{error}</p><button disabled={busy} onclick={()=>load()}>Повторить</button></div>{/if}
@@ -41,7 +43,7 @@
    <div class="admin-list">{#each devices as d}<article class="device-card" aria-label={d.name}>
     <div class="card-top"><h3>{d.name}</h3><span class="pill pending">{states[d.state]}</span></div>
     <p>{d.owner_login} · {d.os} · поколение {d.generation}</p>
-    <div class="profiles">{#each d.profiles as p}<div class="profile"><strong>{p.protocol==='awg'?'AmneziaWG':'REALITY'}</strong><span class="muted">{p.state==='pending'?(p.stored?'Сохранён, ждёт сверки':'Ждёт импорта'):p.state==='ready'?'Готовность записана':states[p.state]??'Требует внимания'}</span></div>{/each}</div>
+    <div class="profiles">{#each d.profiles as p}<div class="profile"><strong>{p.protocol==='awg'?'AmneziaWG':'REALITY'}</strong><span class="muted">{p.state==='pending'?(p.stored?'Сохранён, ждёт сверки':'Ждёт импорта'):p.state==='ready'?'Готовность записана':states[p.state]??'Требует внимания'}</span></div><ProfileDiagnostics diagnostics={p.diagnostics} stored={p.stored}/>{/each}</div>
     <details><summary>Идентификаторы для настройки</summary><dl><dt>Владелец</dt><dd><code>{d.owner_id}</code></dd><dt>Устройство</dt><dd><code>{d.id}</code></dd><dt>Ревизия</dt><dd>{d.revision}</dd>{#each d.profiles as p}<dt>{p.protocol} profile</dt><dd><code>{p.id}</code></dd>{/each}</dl></details>
    </article>{/each}</div>
    <p class="footnote">Сохранённый конфиг ещё ждёт проверки установки и подключения. Состояние устройства не подтверждает, что оно сейчас в сети.</p>
@@ -67,5 +69,6 @@
 </section>
 
 <style>
+ .refresh-note{font-size:11px;color:#63716b;line-height:1.5}
  .admin-data{margin-top:24px}.admin-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:16px 0 24px}.admin-toolbar label{display:grid;gap:8px;font-size:12px;color:#63716b}.admin-toolbar select,.admin-toolbar button,.admin-pagination button{font:inherit;padding:10px;border:1px solid #cad6cf;background:white;border-radius:8px;max-width:100%}.admin-list{display:grid;gap:14px}.admin-list h3{margin:0;font-size:17px}.admin-list .card-top{align-items:start;flex-wrap:wrap}.admin-list p{font-size:13px;overflow-wrap:anywhere}.admin-list code{font-size:11px;overflow-wrap:anywhere;word-break:break-word}.admin-list details{margin-top:16px;font-size:12px}.admin-list summary{cursor:pointer}.admin-list dl{display:grid;gap:6px}.admin-list dd{margin:0 0 8px}.admin-list dt{color:#748178}.admin-list .status-card>div{min-width:0}.admin-pagination{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:24px;font-size:12px}.admin-pagination span{margin-right:auto}.admin-data .profile{flex-wrap:wrap}.admin-data .platforms button{font-size:12px;padding:10px 12px}select:focus-visible,summary:focus-visible{outline:3px solid #12695d;outline-offset:3px}
 </style>

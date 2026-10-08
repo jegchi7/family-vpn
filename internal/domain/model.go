@@ -3,10 +3,22 @@ package domain
 import "time"
 
 type Profile struct {
-	ID       string `json:"id"`
-	Protocol string `json:"protocol"`
-	State    string `json:"state"`
-	Format   string `json:"format"`
+	ID          string              `json:"id"`
+	Protocol    string              `json:"protocol"`
+	State       string              `json:"state"`
+	Format      string              `json:"format"`
+	Diagnostics *ProfileDiagnostics `json:"diagnostics,omitempty"`
+}
+
+// ProfileDiagnostics is a read-only display projection. A configuration match
+// never attests a current VPN session, client acceptance or profile readiness.
+type ProfileDiagnostics struct {
+	Connection         string `json:"connection"`
+	Configuration      string `json:"configuration"`
+	Source             string `json:"source"`
+	CheckedAt          string `json:"checkedAt,omitempty"`
+	ExpiresAt          string `json:"expiresAt,omitempty"`
+	ClientVerification string `json:"clientVerification"`
 }
 type Device struct {
 	ID       string    `json:"id"`

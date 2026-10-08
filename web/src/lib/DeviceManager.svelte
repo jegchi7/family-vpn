@@ -1,6 +1,7 @@
 <script lang="ts">
  import {onMount} from 'svelte';
  import {api,type Device} from './api';
+ import ProfileDiagnostics from './ProfileDiagnostics.svelte';
  import type {components} from './api.generated';
  let {devices,csrf,onchange}:{devices:Device[];csrf:string;onchange:(items:Device[])=>void}=$props();
  let quota=$state<components['schemas']['DeviceQuota']|null>(null);
@@ -31,6 +32,7 @@
 <section aria-label="Устройства и заявки">
  <div class="section-title"><h2>Мои устройства</h2><span>{quota?`Занято ${quota.used} из ${quota.limit}`:'Загружаем лимит…'}</span></div>
  <div class="device-actions"><button class="primary" disabled={busy||!quota||quota.remaining===0} onclick={()=>{showForm=!showForm;error='';}}>{showForm?'Скрыть форму':'Добавить устройство'}</button><button disabled={busy} onclick={reload}>Обновить список</button></div>
+ <p class="form-hint">Здесь показаны последние результаты сверок. Обновите список, чтобы получить новые статусы.</p>
  {#if quota?.remaining===0}<p class="form-hint">Свободных слотов нет. Можно отменить ещё не выданную заявку или обратиться к администратору.</p>{/if}
  {#if error}<p role="alert" class="error">{error}</p>{/if}
  {#if notice}<p role="status" class="auth-notice">{notice}</p>{/if}
@@ -44,7 +46,7 @@
  {#each devices as device (device.id)}<article class="device-card" aria-label={device.name}>
   <div class="card-top"><span class="device-icon">{device.os==='ios'||device.os==='android'?'▯':'▱'}</span><span class="pill" class:pending={device.state!=='active'}>{states[device.state]??device.state}</span></div>
   <h3>{device.name}</h3><p class="muted">{systems[device.os]??device.os}</p>
-  <div class="profiles">{#each device.profiles as profile}<div class="profile"><div><strong>{profile.protocol==='awg'?'Основной':'Резервный'}</strong><small>{profile.protocol==='awg'?'AmneziaWG':'REALITY'}</small></div><span class="muted">{profile.state==='revoked'?'Закрыт':profile.state==='ready'?'Подготовлен':importedPending(profile)?'Сохранён, ждёт сверки':'Ожидает'}</span></div>{/each}</div>
+  <div class="profiles">{#each device.profiles as profile}<div class="profile"><div><strong>{profile.protocol==='awg'?'Основной':'Резервный'}</strong><small>{profile.protocol==='awg'?'AmneziaWG':'REALITY'}</small></div><span class="muted">{profile.state==='revoked'?'Закрыт':profile.state==='ready'?'Подготовлен':importedPending(profile)?'Сохранён, ждёт сверки':'Ожидает'}</span></div><ProfileDiagnostics diagnostics={profile.diagnostics} stored={profile.format==='vless-reality-uri'||profile.format==='awg-3.1-conf'}/>{/each}</div>
   <p class="card-note">{device.state==='pending'?(device.profiles.some(importedPending)?'Конфиг сохранён. Администратор ещё не подтвердил его установку на сервере.':'Рабочий доступ ещё не выдан.'):device.state==='revoked'?'Запись закрыта. Для нового устройства создайте новую заявку.':'Готовность профиля не означает подключение устройства.'}</p>
   {#if editID===device.id}<form onsubmit={rename} class="device-inline"><label for={'rename-'+device.id}>Новое название</label><input id={'rename-'+device.id} bind:value={editName} required maxlength="64" disabled={busy}/><div class="device-actions"><button class="primary" disabled={busy} type="submit">Сохранить название</button><button disabled={busy} type="button" onclick={()=>editID=''}>Закрыть</button></div></form>
   {:else if device.state!=='revoked'&&device.state!=='revoking'}<div class="device-actions"><button disabled={busy} onclick={()=>edit(device)}>Переименовать</button>{#if device.state==='pending'&&device.profiles.every(p=>p.format==='')}<button disabled={busy} onclick={()=>{cancelID=device.id;error='';}}>Отменить заявку</button>{/if}</div>{/if}

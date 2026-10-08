@@ -9,5 +9,8 @@ test('device list, demo download and instructions',async({page})=>{
 test('status remains explicitly simulated and admin route is separate',async({page,request})=>{
  await page.goto('/');await page.getByRole('button',{name:'Проверка связи'}).click();await expect(page.getByRole('heading',{name:'Здесь пока нет проверки вашего VPN'})).toBeVisible();
  expect((await request.get('/api/v1/admin/overview')).status()).toBe(404);
+ // The harness starts two independent processes. Portal readiness does not
+ // imply that the separate management demo listener has finished starting.
+ await expect.poll(async()=>{try{return (await request.get('http://127.0.0.1:8081/healthz',{timeout:1000})).status();}catch{return 0;}},{timeout:15000}).toBe(200);
  await page.goto('http://127.0.0.1:8081');await expect(page.getByRole('heading',{name:'Отдельный контур.'})).toBeVisible();
 });

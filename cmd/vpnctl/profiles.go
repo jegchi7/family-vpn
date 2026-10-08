@@ -14,6 +14,9 @@ import (
 )
 
 func runProfiles(command string, args []string) error {
+	if command == "profile-observe-awg-session" {
+		return runProfileObserveAWGSession(args, os.Stdout)
+	}
 	if command == "profile-observe-xray-users" {
 		return runProfileObserveXrayUsers(args, os.Stdout)
 	}

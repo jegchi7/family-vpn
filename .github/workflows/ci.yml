@@ -18,12 +18,51 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm run setup
       - run: npm run check
+      - name: Protected installer and Foreign filesystem boundaries
+        # Synthetic temp-directory tests only; no core/service/network activation.
+        run: |
+          bootstrap_go_executable="$(command -v go)"
+          sudo env GOTOOLCHAIN=local GOMODCACHE="$(go env GOMODCACHE)" GOCACHE="$RUNNER_TEMP/fvpn-root-go-build" "$bootstrap_go_executable" test -race ./internal/coreinstall ./internal/foreignsetup -run 'Test(Linux|PrivateStage|StageCancelled)'
       - run: npm run build
       - run: npm run test:persistence
       - run: npm run test:intents
       - run: npm run test:release
+      - name: Immutable release publication boundaries
+        run: |
+          node --test scripts/publish-release.test.mjs
+          python3 -I scripts/bootstrap-github.test.py
       - run: npm --prefix web exec -- playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: npm run test:e2e:auth
       - run: npm run test:e2e:admin
       - run: npm run release:linux
+  publish-bootstrap:
+    needs: local-demo
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'jegchi7/family-vpn'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: family-vpn-release-${{ github.repository }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm run setup
+      - run: npm run build
+      - name: Cross-build both operator bundles
+        run: |
+          npm run release:linux -- --arch amd64
+          npm run release:linux -- --arch arm64
+      - name: Publish commit-bound bootstrap prerelease without replacement
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publish-release.mjs

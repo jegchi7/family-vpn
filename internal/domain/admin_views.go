@@ -19,11 +19,12 @@ type AdminUser struct {
 	RecoveryPending bool   `json:"recovery_pending"`
 }
 type AdminProfile struct {
-	ID       string `json:"id"`
-	Protocol string `json:"protocol"`
-	State    string `json:"state"`
-	Format   string `json:"format"`
-	Stored   bool   `json:"stored"`
+	ID          string              `json:"id"`
+	Protocol    string              `json:"protocol"`
+	State       string              `json:"state"`
+	Format      string              `json:"format"`
+	Stored      bool                `json:"stored"`
+	Diagnostics *ProfileDiagnostics `json:"diagnostics,omitempty"`
 }
 type AdminDevice struct {
 	ID         string         `json:"id"`

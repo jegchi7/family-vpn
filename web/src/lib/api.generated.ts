@@ -764,6 +764,7 @@ export interface components {
              * @enum {string}
              */
             format: "txt" | "" | "vless-reality-uri" | "awg-3.1-conf";
+            diagnostics?: components["schemas"]["ProfileDiagnostics"];
         };
         Device: {
             id: string;
@@ -918,6 +919,7 @@ export interface components {
             state: "pending" | "ready" | "revoking" | "revoked" | "error";
             format: string;
             stored: boolean;
+            diagnostics?: components["schemas"]["ProfileDiagnostics"];
         };
         AdminDevice: {
             id: string;
@@ -954,6 +956,24 @@ export interface components {
         AdminAuditEventPage: {
             items: components["schemas"]["AdminAuditEvent"][];
             next_cursor: string;
+        };
+        /** @description Read-only portal metadata projection. Configuration comparison alone never attests a live connection, client compatibility, actual peer installation, readiness or permission to download. Stored AWG observation expires after 60 seconds. No network/core calls or control/key access. */
+        ProfileDiagnostics: {
+            /** @enum {string} */
+            connection: "unknown";
+            /** @enum {string} */
+            configuration: "unchecked" | "stored" | "matched" | "conflict" | "expired" | "stale";
+            /** @enum {string} */
+            source: "none" | "snapshot" | "native_readback";
+            /**
+             * Format: date-time
+             * @description Canonical UTC timestamp of the stored comparison; only emitted together with expiresAt.
+             */
+            checkedAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** @enum {string} */
+            clientVerification: "unchecked";
         };
     };
     responses: never;

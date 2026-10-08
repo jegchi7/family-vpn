@@ -32,7 +32,24 @@ func (w *boundedOutput) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 func readNative(ctx context.Context, interfaceName, pin string) ([]byte, error) {
+	return readNativeCommand(ctx, interfaceName, pin, "showconf")
+}
+
+// The command vocabulary is closed; callers cannot select an executable,
+// arbitrary arguments, an interface discovery command, or a mutation.
+func readNativeCommand(ctx context.Context, interfaceName, pin, view string) ([]byte, error) {
 	if !validInterface(interfaceName) || len(pin) != 64 {
+		return nil, ErrRuntime
+	}
+	var args []string
+	allowEmpty := false
+	switch view {
+	case "showconf":
+		args = []string{"showconf", interfaceName}
+	case "latest-handshakes", "transfer":
+		args = []string{"show", interfaceName, view}
+		allowEmpty = true
+	default:
 		return nil, ErrRuntime
 	}
 	expected, e := hex.DecodeString(pin)
@@ -66,7 +83,7 @@ func readNative(ctx context.Context, interfaceName, pin string) ([]byte, error) 
 	}
 	// Execute the already pinned descriptor with bounded pipe cleanup.
 	output := &boundedOutput{}
-	if e = observerexec.Run(ctx, f, []string{"showconf", interfaceName}, output); e != nil || output.overflow || len(output.data) == 0 {
+	if e = observerexec.Run(ctx, f, args, output); e != nil || output.overflow || (!allowEmpty && len(output.data) == 0) {
 		clear(output.data)
 		return nil, ErrRuntime
 	}

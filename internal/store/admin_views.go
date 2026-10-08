@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"familyvpn.local/platform/internal/auth"
@@ -57,6 +58,9 @@ func (p *PortalStore) adminUsersAt(ctx context.Context, request domain.PageReque
 	return out, nil
 }
 func (p *PortalStore) AdminDevices(ctx context.Context, request domain.PageRequest, state string) (domain.Page[domain.AdminDevice], error) {
+	return p.adminDevicesAt(ctx, request, state, time.Now().UTC())
+}
+func (p *PortalStore) adminDevicesAt(ctx context.Context, request domain.PageRequest, state string, now time.Time) (domain.Page[domain.AdminDevice], error) {
 	out := domain.Page[domain.AdminDevice]{Items: []domain.AdminDevice{}}
 	if !validPage(request, false) {
 		return out, auth.ErrInput
@@ -69,7 +73,7 @@ func (p *PortalStore) AdminDevices(ctx context.Context, request domain.PageReque
 	if e := p.AssertLocalAuth(ctx); e != nil {
 		return out, e
 	}
-	tx, e := p.db.BeginTx(ctx, nil)
+	tx, e := p.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if e != nil {
 		return out, e
 	}
@@ -114,6 +118,13 @@ func (p *PortalStore) AdminDevices(ctx context.Context, request domain.PageReque
 		rows.Close()
 		if e != nil {
 			return out, e
+		}
+		for j := range d.Profiles {
+			profile := &d.Profiles[j]
+			profile.Diagnostics, e = profileDiagnosticsTx(ctx, tx, diagnosticBinding{owner: d.OwnerID, device: d.ID, profile: profile.ID, protocol: profile.Protocol, format: profile.Format, deviceState: d.State, profileState: profile.State, generation: d.Generation, revision: d.Revision, stored: profile.Stored}, now)
+			if e != nil {
+				return out, e
+			}
 		}
 	}
 	if e = tx.Commit(); e != nil {

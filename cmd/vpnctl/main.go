@@ -23,9 +23,21 @@ func main() {
 }
 func run() error {
 	if len(os.Args) < 2 {
-		return errors.New("usage: vpnctl stand-check|demo-init|db-status|demo-rename|auth-init|auth-invite|auth-recovery|auth-reissue-invite|admin-*|profile-* [flags]")
+		return errors.New("usage: vpnctl stand-check|demo-init|db-status|demo-rename|auth-init|auth-invite|auth-recovery|auth-reissue-invite|admin-*|profile-*|core-*|foreign-*|ru-*|network-* [flags]")
 	}
 	command := os.Args[1]
+	if strings.HasPrefix(command, "core-") {
+		return runCores(command, os.Args[2:])
+	}
+	if strings.HasPrefix(command, "foreign-") {
+		return runForeign(command, os.Args[2:])
+	}
+	if strings.HasPrefix(command, "ru-") {
+		return runRU(command, os.Args[2:])
+	}
+	if strings.HasPrefix(command, "network-") {
+		return runNetwork(command, os.Args[2:])
+	}
 	if command == "stand-check" {
 		return runStandCheck(os.Args[2:], os.Stdout)
 	}
