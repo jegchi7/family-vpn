@@ -486,7 +486,7 @@ func parseQdiscs(data []byte, allowedInterfaces []string) error {
 
 func kernelSysctlKeys(scope string) []string {
 	if scope == "host" {
-		return []string{"net.ipv4.ip_forward", "net.ipv6.conf." + netguard.HostVeth + ".disable_ipv6", "net.ipv4.conf." + netguard.HostVeth + ".rp_filter", "net.ipv4.conf." + netguard.HostVeth + ".accept_redirects", "net.ipv4.conf." + netguard.HostVeth + ".send_redirects", "net.ipv4.conf." + netguard.HostVeth + ".route_localnet"}
+		return []string{"net.ipv4.ip_forward", "net.ipv6.conf." + netguard.HostVeth + ".disable_ipv6", "net.ipv4.conf." + netguard.HostVeth + ".rp_filter", "net.ipv4.conf." + netguard.HostVeth + ".accept_redirects", "net.ipv4.conf." + netguard.HostVeth + ".send_redirects", "net.ipv4.conf." + netguard.HostVeth + ".route_localnet", "net.ipv4.conf." + netguard.HostVeth + ".forwarding"}
 	}
 	if scope != netguard.Namespace {
 		return nil
@@ -501,11 +501,21 @@ func kernelSysctlKeys(scope string) []string {
 }
 
 func validateKernelSysctls(scope string, data []byte) error {
+	return validateKernelSysctlsPhase(scope, data, true, false)
+}
+
+func validateKernelSysctlsPhase(scope string, data []byte, enabled, transition bool) error {
 	keys := kernelSysctlKeys(scope)
 	if len(keys) == 0 {
 		return ErrInventory
 	}
-	expected := []byte("1\n1\n1\n0\n0\n0\n")
+	expected := []byte("1\n1\n1\n0\n0\n0\n1\n")
+	if scope == "host" && !enabled {
+		expected[0] = '0'
+	}
+	if scope == "host" && transition && len(data) == len(expected) && (data[0] == '0' || data[0] == '1') {
+		expected[0] = data[0]
+	}
 	if scope == netguard.Namespace {
 		expected = []byte("1\n1\n1\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n")
 	}

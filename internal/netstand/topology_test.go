@@ -248,7 +248,7 @@ func TestTCGuardRejectsPacketActionsAndUnknownInterfaces(t *testing.T) {
 }
 
 func TestKernelSysctlProofUsesExactClosedEffectiveInterfaceSettings(t *testing.T) {
-	host := []byte("1\n1\n1\n0\n0\n0\n")
+	host := []byte("1\n1\n1\n0\n0\n0\n1\n")
 	ns := []byte("1\n1\n1\n1\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n1\n0\n0\n0\n")
 	for _, tc := range []struct {
 		scope string

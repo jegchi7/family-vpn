@@ -100,12 +100,28 @@ func applyNative(ctx context.Context, i netguard.Inputs, t Target) (Summary, err
 	}
 	s.InventoryChecked = true
 	s.ExecutionScopeBound = true
-	// Linux's global forwarding transition also resets host interface behavior
-	// and LRO. No write is allowed until preservation of that baseline exists.
-	if !v.IPv4Forwarding || !m.IPv4ForwardingBefore {
+	if v.IPv4Forwarding != m.IPv4ForwardingBefore {
 		return s, ErrForwarding
 	}
+	coexist, e := collectCoexistence(ctx, i, t, tools, v, nil)
+	if e != nil || coexist != m.Coexistence {
+		return s, ErrInventory
+	}
+	var preservation *forwardingPreservation
+	if !v.IPv4Forwarding {
+		preservation, e = captureForwarding(ctx, t, tools, v.Interfaces, i.Uplink)
+		if e != nil {
+			return s, e
+		}
+		defer preservation.close()
+		if preservation.baselineHash() != m.ForwardingBaselineSHA256 || preservation.expectedHash() != m.ForwardingExpectedSHA256 {
+			return s, ErrForwarding
+		}
+	}
 	p, e := netguard.Build(i, v)
+	if e == nil {
+		p, e = coexistencePlan(p, coexist)
+	}
 	if e != nil || len(p.Steps) != m.Steps || !bytes.Equal(p.HostFirewall, a.Host) || !bytes.Equal(p.NamespaceFirewall, a.Namespace) {
 		return s, ErrInventory
 	}
@@ -130,7 +146,7 @@ func applyNative(ctx context.Context, i netguard.Inputs, t Target) (Summary, err
 	if refreshStage(c) != nil {
 		return s, ErrProtected
 	}
-	r := &nativeRunner{target: t, tools: tools, inputs: i, artifacts: a}
+	r := &nativeRunner{target: t, tools: tools, inputs: i, artifacts: a, manifest: m, preservation: preservation, forwardingEnabled: m.IPv4ForwardingBefore}
 	defer func() { r.namespace.close() }()
 	recorded := &recordedRunner{native: r, operation: op}
 	// Once the first mutation is attempted, an error cannot prove the kernel

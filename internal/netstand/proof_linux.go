@@ -5,7 +5,6 @@ package netstand
 import (
 	"bytes"
 	"context"
-	"io"
 	"net/netip"
 	"os"
 	"runtime"
@@ -23,11 +22,8 @@ func (r *nativeRunner) verifyKernel(ctx context.Context, p netguard.Plan, activa
 	if ctx.Err() != nil || scopeCheck(r.target) != nil {
 		return ErrGuardProof
 	}
-	if e := legacyTablesAbsent(); e != nil {
-		return e
-	}
 	hostNFT, e := r.read(ctx, "host", "nft", "-j", "list", "ruleset")
-	if e != nil || netguard.RequireNoUnownedPacketRewrite(hostNFT) != nil || netguard.VerifyNFTReadback(p, "host", hostNFT) != nil {
+	if e != nil || netguard.VerifyNFTReadback(p, "host", hostNFT) != nil {
 		return ErrGuardProof
 	}
 	nsNFT, e := r.read(ctx, netguard.Namespace, "nft", "-j", "list", "ruleset")
@@ -64,23 +60,34 @@ func (r *nativeRunner) verifyKernel(ctx context.Context, p netguard.Plan, activa
 	}
 	for _, scope := range []string{"host", netguard.Namespace} {
 		sys, e := r.read(ctx, scope, "sysctl", append([]string{"-n"}, kernelSysctlKeys(scope)...)...)
-		if e != nil || validateKernelSysctls(scope, sys) != nil {
+		if e != nil || validateKernelSysctlsPhase(scope, sys, r.forwardingEnabled, r.forwardingTransition) != nil {
 			return ErrGuardProof
 		}
 	}
-	inventory.IPv4Forwarding = true
+	inventory.IPv4Forwarding = r.manifest.IPv4ForwardingBefore
 	fresh, e := netguard.Build(r.inputs, inventory)
 	if e != nil || !bytes.Equal(fresh.HostFirewall, p.HostFirewall) || !bytes.Equal(fresh.NamespaceFirewall, p.NamespaceFirewall) {
 		return ErrGuardProof
 	}
+	if _, e := collectCoexistence(ctx, r.inputs, r.target, r.tools, inventory, &r.manifest.Coexistence); e != nil {
+		return ErrGuardProof
+	}
+	if r.forwardingEnabled && !r.manifest.IPv4ForwardingBefore && !r.forwardingTransition {
+		if verifyForwardingExpected(ctx, r.target, r.tools, hostInterfaces, r.manifest.ForwardingExpectedSHA256) != nil {
+			return ErrGuardProof
+		}
+	}
 	// Close the firewall observation after topology/sysctl reads. An intervening
 	// unsupported NAT/offload declaration invalidates this observation.
 	hostNFT, e = r.read(ctx, "host", "nft", "-j", "list", "ruleset")
-	if e != nil || netguard.RequireNoUnownedPacketRewrite(hostNFT) != nil || netguard.VerifyNFTReadback(p, "host", hostNFT) != nil {
+	if e != nil || netguard.VerifyNFTReadback(p, "host", hostNFT) != nil {
 		return ErrGuardProof
 	}
 	nsNFT, e = r.read(ctx, netguard.Namespace, "nft", "-j", "list", "ruleset")
 	if e != nil || netguard.VerifyNFTReadback(p, netguard.Namespace, nsNFT) != nil || r.namespace.check() != nil || scopeCheck(r.target) != nil || ctx.Err() != nil {
+		return ErrGuardProof
+	}
+	if _, e := collectCoexistence(ctx, r.inputs, r.target, r.tools, inventory, &r.manifest.Coexistence); e != nil {
 		return ErrGuardProof
 	}
 	return nil
@@ -105,7 +112,7 @@ func Verify(ctx context.Context, i netguard.Inputs, t Target) (Proof, Summary, e
 	defer c.close()
 	defer clear(a.ForeignXray)
 	s := summary(m)
-	if m.Inputs != i || m.Target != t || !m.IPv4ForwardingBefore {
+	if m.Inputs != i || m.Target != t {
 		return Proof{}, s, ErrGuardProof
 	}
 	if scopeCheck(t) != nil {
@@ -121,7 +128,10 @@ func Verify(ctx context.Context, i netguard.Inputs, t Target) (Proof, Summary, e
 		return Proof{}, s, e
 	}
 	defer closeTools(tools)
-	r := &nativeRunner{target: t, tools: tools, inputs: i, artifacts: a}
+	if readOperation(c[len(c)-1].fd, hash(a.Manifest), m.Steps) != nil {
+		return Proof{}, s, ErrRecovery
+	}
+	r := &nativeRunner{target: t, tools: tools, inputs: i, artifacts: a, manifest: m, forwardingEnabled: true}
 	defer func() { r.namespace.close() }()
 	p, e := netguard.Build(i, m.Inventory)
 	if e != nil {
@@ -170,24 +180,6 @@ func (p Proof) OpenNamespace(i netguard.Inputs, t Target) (*os.File, error) {
 	}
 	unix.CloseOnExec(fd)
 	return os.NewFile(uintptr(fd), "private-guard-namespace"), nil
-}
-
-func legacyTablesAbsent() error {
-	for _, path := range []string{"/proc/net/ip_tables_names", "/proc/net/ip6_tables_names"} {
-		f, e := os.Open(path)
-		if os.IsNotExist(e) {
-			continue
-		}
-		if e != nil {
-			return ErrInventory
-		}
-		data, e := io.ReadAll(io.LimitReader(f, 4097))
-		f.Close()
-		if e != nil || len(data) > 4096 || len(bytes.TrimSpace(data)) != 0 {
-			return ErrInventory
-		}
-	}
-	return nil
 }
 
 // Used only by strict topology validation; addresses are never report fields.

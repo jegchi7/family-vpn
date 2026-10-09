@@ -27,6 +27,14 @@ func openTools(t Target) (map[string]*pinnedTool, error) {
 		}
 		tools[s.name] = tool
 	}
+	if t.XTLegacySHA256 != "" {
+		tool, e := openTool("xtables-legacy-multi", t.XTLegacySHA256)
+		if e != nil {
+			closeTools(tools)
+			return nil, e
+		}
+		tools["xtables-legacy-multi"] = tool
+	}
 	return tools, nil
 }
 func closeTools(tools map[string]*pinnedTool) {
@@ -119,15 +127,19 @@ func openNamespace() (*namespaceHandle, error) {
 }
 
 type nativeRunner struct {
-	target    Target
-	tools     map[string]*pinnedTool
-	namespace *namespaceHandle
-	inputs    netguard.Inputs
-	artifacts artifacts
+	target               Target
+	tools                map[string]*pinnedTool
+	namespace            *namespaceHandle
+	inputs               netguard.Inputs
+	artifacts            artifacts
+	manifest             manifest
+	preservation         *forwardingPreservation
+	forwardingEnabled    bool
+	forwardingTransition bool
 }
 
 func (r *nativeRunner) call(ctx context.Context, scope, name string, args []string, stdin []byte) ([]byte, error) {
-	if name != "ip" && name != "nft" && name != "sysctl" && name != "tc" || scope != "host" && scope != netguard.Namespace || len(args) > 64 || len(stdin) > MaxArtifact || ctx.Err() != nil {
+	if name != "ip" && name != "nft" && name != "sysctl" && name != "tc" && name != "xtables-legacy-multi" || scope != "host" && scope != netguard.Namespace || len(args) > 64 || len(stdin) > MaxArtifact || ctx.Err() != nil || r.tools[name] == nil {
 		return nil, ErrExecution
 	}
 	for _, a := range args {
@@ -169,6 +181,9 @@ func (r *nativeRunner) call(ctx context.Context, scope, name string, args []stri
 	child, cancel := context.WithTimeout(ctx, 4*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(child, "/proc/self/fd/3", arguments...)
+	if name == "xtables-legacy-multi" {
+		cmd.Args[0] = "xtables-legacy-multi"
+	}
 	cmd.ExtraFiles = extra
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "LC_ALL=C"}
 	cmd.Stdin = bytes.NewReader(stdin)
@@ -204,6 +219,29 @@ func (r *nativeRunner) call(ctx context.Context, scope, name string, args []stri
 	return bytes.Clone(out.Bytes()), nil
 }
 func (r *nativeRunner) Run(ctx context.Context, s netguard.Step) error {
+	if isForwardingEnable(s) {
+		if r.preservation == nil || r.forwardingEnabled {
+			return ErrForwarding
+		}
+		p, e := netguard.Build(r.inputs, r.manifest.Inventory)
+		if e != nil {
+			return ErrProtected
+		}
+		r.forwardingTransition = true
+		e = r.preservation.enable(ctx, r, func(ctx context.Context) error { return r.verifyKernel(ctx, p, false) })
+		r.forwardingTransition = false
+		if e != nil {
+			return e
+		}
+		r.forwardingEnabled = true
+		return nil
+	}
+	if ownedForwardInsertion(s, r.manifest.Coexistence) {
+		p, e := netguard.Build(r.inputs, r.manifest.Inventory)
+		if e != nil || r.guardInsertion(ctx, p) != nil {
+			return ErrGuardProof
+		}
+	}
 	name := ""
 	switch s.Executable {
 	case netguard.IPExecutable:
@@ -212,6 +250,11 @@ func (r *nativeRunner) Run(ctx context.Context, s netguard.Step) error {
 		name = "nft"
 	case netguard.SysctlExecutable:
 		name = "sysctl"
+	case netguard.LegacyXtablesExecutable:
+		if !ownedForwardInsertion(s, r.manifest.Coexistence) || s.Scope != "host" {
+			return ErrInput
+		}
+		name = "xtables-legacy-multi"
 	default:
 		return ErrInput
 	}
@@ -220,18 +263,6 @@ func (r *nativeRunner) Run(ctx context.Context, s netguard.Step) error {
 		r.namespace, e = openNamespace()
 	}
 	return e
-}
-
-func equalStrings(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for n := range a {
-		if a[n] != b[n] {
-			return false
-		}
-	}
-	return true
 }
 
 type startResult struct {

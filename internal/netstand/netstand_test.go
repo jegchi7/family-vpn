@@ -42,7 +42,7 @@ func TestProtectedArtifactCannotRelabelOrReplayObservation(t *testing.T) {
 	}
 	changes := []artifacts{
 		{Manifest: append(bytes.Clone(a.Manifest), '\n'), Host: a.Host, Namespace: a.Namespace},
-		{Manifest: bytes.Replace(a.Manifest, []byte(`"format":1`), []byte(`"format":1,"format":1`), 1), Host: a.Host, Namespace: a.Namespace},
+		{Manifest: bytes.Replace(a.Manifest, []byte(`"format":2`), []byte(`"format":2,"format":2`), 1), Host: a.Host, Namespace: a.Namespace},
 		{Manifest: a.Manifest, Host: append(bytes.Clone(a.Host), '\n'), Namespace: a.Namespace},
 		{Manifest: bytes.Replace(a.Manifest, []byte(`"steps":`), []byte(`"unknown":false,"steps":`), 1), Host: a.Host, Namespace: a.Namespace},
 		{Manifest: a.Manifest, Host: a.Host, Namespace: a.Namespace, ForeignXray: []byte("private unexpected")},

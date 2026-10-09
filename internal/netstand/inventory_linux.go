@@ -48,10 +48,6 @@ func collectInventory(ctx context.Context, t Target, tools map[string]*pinnedToo
 	if e != nil || existing {
 		return v, ErrInventory
 	}
-	full, e := read("nft", "-j", "list", "ruleset")
-	if e != nil || netguard.RequireNoUnownedPacketRewrite(full) != nil {
-		return v, ErrInventory
-	}
 	if noNamespaceOverrides() != nil {
 		return v, ErrProtected
 	}
@@ -80,9 +76,6 @@ func collectInventory(ctx context.Context, t Target, tools map[string]*pinnedToo
 		if e != nil || port443Free(data) != nil {
 			return v, ErrInventory
 		}
-	}
-	if legacyTablesAbsent() != nil {
-		return v, ErrInventory
 	}
 	r := &nativeRunner{target: t, tools: tools}
 	if r.verifyTC(ctx, "host", v.Interfaces) != nil {

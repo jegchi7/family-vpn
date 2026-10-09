@@ -5,6 +5,8 @@ import io
 import json
 from pathlib import Path
 import signal
+import os
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -85,6 +87,54 @@ def write_archive(path, files, special=None):
 
 
 class BootstrapTests(unittest.TestCase):
+    def test_interactive_terminal_failure_and_failed_operator_are_distinct(self):
+        with patch("builtins.open", side_effect=OSError("private terminal detail")), patch.object(bootstrap.subprocess, "run") as run:
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "interactive terminal"):
+                bootstrap.invoke("synthetic-bundle", [], interactive=True)
+            run.assert_not_called()
+        with patch.object(bootstrap.subprocess, "run", side_effect=OSError("private exec detail")):
+            with self.assertRaisesRegex(bootstrap.BootstrapError, "could not be started") as result:
+                bootstrap.invoke("synthetic-bundle", ["core-plan"])
+            self.assertNotIn("private", str(result.exception))
+
+    @unittest.skipUnless(sys.platform == "linux", "Real controlling terminal regression requires Linux")
+    def test_interactive_foreign_reads_controlling_terminal_with_stdin_devnull(self):
+        import pty
+        master, slave = pty.openpty()
+        try:
+            terminal_path = os.ttyname(slave)
+            with tempfile.TemporaryDirectory() as temporary:
+                scripts = Path(temporary) / "scripts"
+                scripts.mkdir()
+                (scripts / "bootstrap-foreign.sh").write_text(
+                    "#!/bin/bash\nset -euo pipefail\n"
+                    "for expected in one two three four; do\n"
+                    "  IFS= read -r actual\n  test \"$actual\" = \"$expected\"\ndone\n"
+                    "printf 'synthetic-terminal-complete\\n'\n", encoding="utf-8")
+                program = (
+                    "import os,fcntl,termios,importlib.util,sys; "
+                    "os.setsid(); fd=os.open(sys.argv[1],os.O_RDWR); "
+                    "fcntl.ioctl(fd,termios.TIOCSCTTY,0); "
+                    "s=importlib.util.spec_from_file_location('bootstrap',sys.argv[2]); "
+                    "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+                    "m.invoke(sys.argv[3],[],interactive=True); os.close(fd)"
+                )
+                child = subprocess.Popen([sys.executable, "-I", "-c", program, terminal_path,
+                                          str(Path(bootstrap.__file__).resolve()), temporary],
+                                         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                try:
+                    os.write(master, b"one\ntwo\nthree\nfour\n")
+                    stdout, stderr = child.communicate(timeout=10)
+                    self.assertEqual(child.returncode, 0, stderr.decode("utf-8", errors="replace"))
+                    self.assertEqual(stdout, b"synthetic-terminal-complete\n")
+                finally:
+                    if child.poll() is None:
+                        child.kill()
+                        child.communicate(timeout=5)
+        finally:
+            os.close(master)
+            os.close(slave)
+
     def test_published_commit_bound_assets(self):
         self.assertEqual(len(bootstrap.checked_release(MetadataTransport(), "b" * 40)), 4)
 

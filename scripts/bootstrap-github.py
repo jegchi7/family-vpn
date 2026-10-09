@@ -19,7 +19,7 @@ import urllib.parse
 import urllib.request
 
 REPOSITORY = "jegchi7/family-vpn"
-VERSION = "0.28.0"
+VERSION = "0.29.0"
 BASE = "https://api.github.com/repos/" + REPOSITORY
 MAX_ARCHIVE = 128 * 1024 * 1024
 MAX_EXPANDED = 160 * 1024 * 1024
@@ -324,7 +324,12 @@ def invoke(bundle, arguments, interactive=False):
     command = [os.path.join(bundle, "build", "vpnctl")] + arguments
     try:
         if interactive:
-            with open("/dev/tty", "r+") as terminal:
+            try:
+                terminal = open("/dev/tty", "rb", buffering=0)
+            except (OSError, ValueError):
+                raise BootstrapError("An interactive terminal is required for new Foreign staging") from None
+            with terminal:
+                require(os.isatty(terminal.fileno()), "An interactive terminal is required for new Foreign staging")
                 result = subprocess.run(["/bin/bash", os.path.join(bundle, "scripts", "bootstrap-foreign.sh"), "--apply"],
                                         cwd=bundle, env=environment, stdin=terminal)
         else:
@@ -333,7 +338,7 @@ def invoke(bundle, arguments, interactive=False):
     except BootstrapError:
         raise
     except Exception:
-        raise BootstrapError("Operator command failed; an interactive terminal is required for new Foreign staging") from None
+        raise BootstrapError("Operator command could not be started; existing state was preserved") from None
 
 
 def run(role, apply):

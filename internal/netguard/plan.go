@@ -239,7 +239,7 @@ func Build(i Inputs, v Inventory) (Plan, error) {
 	add("host", IPExecutable, "link", "set", NamespaceVeth, "netns", Namespace)
 	add("host", IPExecutable, "address", "add", p.HostIPv4+"/30", "dev", HostVeth)
 	add(Namespace, IPExecutable, "address", "add", p.NamespaceIPv4+"/30", "dev", NamespaceVeth)
-	hostSysctls := []string{"-w", "net.ipv6.conf." + HostVeth + ".disable_ipv6=1", "net.ipv4.conf." + HostVeth + ".rp_filter=1", "net.ipv4.conf." + HostVeth + ".accept_redirects=0", "net.ipv4.conf." + HostVeth + ".send_redirects=0", "net.ipv4.conf." + HostVeth + ".route_localnet=0"}
+	hostSysctls := []string{"-w", "net.ipv6.conf." + HostVeth + ".disable_ipv6=1", "net.ipv4.conf." + HostVeth + ".forwarding=1", "net.ipv4.conf." + HostVeth + ".rp_filter=1", "net.ipv4.conf." + HostVeth + ".accept_redirects=0", "net.ipv4.conf." + HostVeth + ".send_redirects=0", "net.ipv4.conf." + HostVeth + ".route_localnet=0"}
 	add("host", SysctlExecutable, hostSysctls...)
 	nsSysctls := []string{"-w", "net.ipv6.conf.all.disable_ipv6=1", "net.ipv6.conf.default.disable_ipv6=1", "net.ipv6.conf.lo.disable_ipv6=1", "net.ipv6.conf." + NamespaceVeth + ".disable_ipv6=1", "net.ipv4.ip_forward=0"}
 	// In host mode accept_redirects uses all/interface OR semantics. The veth

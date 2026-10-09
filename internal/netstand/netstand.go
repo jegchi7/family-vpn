@@ -34,11 +34,12 @@ var (
 // Target is independently selected. Current inventory cannot fill missing
 // expected hashes or execution scope on the caller's behalf.
 type Target struct {
-	Scope        runtimeenv.Scope `json:"scope"`
-	IP_SHA256    string           `json:"ip_sha256"`
-	NFT_SHA256   string           `json:"nft_sha256"`
-	SysctlSHA256 string           `json:"sysctl_sha256"`
-	TCSHA256     string           `json:"tc_sha256"`
+	Scope          runtimeenv.Scope `json:"scope"`
+	IP_SHA256      string           `json:"ip_sha256"`
+	NFT_SHA256     string           `json:"nft_sha256"`
+	SysctlSHA256   string           `json:"sysctl_sha256"`
+	TCSHA256       string           `json:"tc_sha256"`
+	XTLegacySHA256 string           `json:"xtables_legacy_sha256,omitempty"`
 }
 
 func digestValid(s string) bool {
@@ -52,11 +53,23 @@ func digestValid(s string) bool {
 	}
 	return true
 }
+
+func equalStrings(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for n := range a {
+		if a[n] != b[n] {
+			return false
+		}
+	}
+	return true
+}
 func (t Target) Valid() bool {
-	return t.Scope.Valid() && digestValid(t.IP_SHA256) && digestValid(t.NFT_SHA256) && digestValid(t.SysctlSHA256) && digestValid(t.TCSHA256)
+	return t.Scope.Valid() && digestValid(t.IP_SHA256) && digestValid(t.NFT_SHA256) && digestValid(t.SysctlSHA256) && digestValid(t.TCSHA256) && (t.XTLegacySHA256 == "" || digestValid(t.XTLegacySHA256))
 }
 func Validate(i netguard.Inputs, t Target) error {
-	if netguard.ValidateInputs(i) != nil || !t.Valid() {
+	if netguard.ValidateInputs(i) != nil || !t.Valid() || i.Role != "foreign" && t.XTLegacySHA256 != "" {
 		return ErrInput
 	}
 	return nil
@@ -104,15 +117,18 @@ func (p Proof) valid(i netguard.Inputs, t Target, now time.Time) bool {
 }
 
 type manifest struct {
-	Format               int                `json:"format"`
-	Inputs               netguard.Inputs    `json:"inputs"`
-	Target               Target             `json:"target"`
-	Inventory            netguard.Inventory `json:"inventory"`
-	IPv4ForwardingBefore bool               `json:"ipv4_forwarding_before"`
-	HostSHA256           string             `json:"host_sha256"`
-	NamespaceSHA256      string             `json:"namespace_sha256"`
-	ForeignSHA256        string             `json:"foreign_sha256,omitempty"`
-	Steps                int                `json:"steps"`
+	Format                   int                `json:"format"`
+	Inputs                   netguard.Inputs    `json:"inputs"`
+	Target                   Target             `json:"target"`
+	Inventory                netguard.Inventory `json:"inventory"`
+	IPv4ForwardingBefore     bool               `json:"ipv4_forwarding_before"`
+	HostSHA256               string             `json:"host_sha256"`
+	NamespaceSHA256          string             `json:"namespace_sha256"`
+	ForeignSHA256            string             `json:"foreign_sha256,omitempty"`
+	Steps                    int                `json:"steps"`
+	ForwardingBaselineSHA256 string             `json:"forwarding_baseline_sha256,omitempty"`
+	ForwardingExpectedSHA256 string             `json:"forwarding_expected_sha256,omitempty"`
+	Coexistence              coexistence        `json:"coexistence"`
 }
 type artifacts struct{ Manifest, Host, Namespace, ForeignXray []byte }
 
@@ -121,7 +137,7 @@ func buildArtifacts(i netguard.Inputs, t Target, v netguard.Inventory, p netguar
 	if Validate(i, t) != nil || len(p.HostFirewall) == 0 || len(p.NamespaceFirewall) == 0 || len(p.HostFirewall) > MaxArtifact || len(p.NamespaceFirewall) > MaxArtifact || len(p.Steps) == 0 || len(p.Steps) > 64 {
 		return artifacts{}, ErrInput
 	}
-	m := manifest{Format: 1, Inputs: i, Target: t, Inventory: v, IPv4ForwardingBefore: v.IPv4Forwarding, HostSHA256: hash(p.HostFirewall), NamespaceSHA256: hash(p.NamespaceFirewall), Steps: len(p.Steps)}
+	m := manifest{Format: 2, Inputs: i, Target: t, Inventory: v, IPv4ForwardingBefore: v.IPv4Forwarding, HostSHA256: hash(p.HostFirewall), NamespaceSHA256: hash(p.NamespaceFirewall), Steps: len(p.Steps)}
 	b, e := json.Marshal(m)
 	if e != nil || len(b) > MaxArtifact {
 		return artifacts{}, ErrInput
@@ -135,7 +151,7 @@ func validateArtifacts(a artifacts) (manifest, error) {
 	}
 	d := json.NewDecoder(bytes.NewReader(a.Manifest))
 	d.DisallowUnknownFields()
-	if d.Decode(&m) != nil || d.Decode(new(any)) != io.EOF || m.Format != 1 || Validate(m.Inputs, m.Target) != nil || m.HostSHA256 != hash(a.Host) || m.NamespaceSHA256 != hash(a.Namespace) || m.Steps <= 0 || m.Steps > 64 {
+	if d.Decode(&m) != nil || d.Decode(new(any)) != io.EOF || m.Format != 2 || Validate(m.Inputs, m.Target) != nil || m.HostSHA256 != hash(a.Host) || m.NamespaceSHA256 != hash(a.Namespace) || m.Steps <= 0 || m.Steps > 64 || validatePreservationMetadata(m) != nil || m.Coexistence.valid(m.Inputs, m.Target) != nil {
 		return manifest{}, ErrProtected
 	}
 	canonical, e := json.Marshal(m)
@@ -150,6 +166,9 @@ func validateArtifacts(a artifacts) (manifest, error) {
 		return manifest{}, ErrProtected
 	}
 	p, e := netguard.Build(m.Inputs, m.Inventory)
+	if e == nil {
+		p, e = coexistencePlan(p, m.Coexistence)
+	}
 	if e != nil || m.Inventory.IPv4Forwarding != m.IPv4ForwardingBefore || len(p.Steps) != m.Steps || !bytes.Equal(p.HostFirewall, a.Host) || !bytes.Equal(p.NamespaceFirewall, a.Namespace) {
 		return manifest{}, ErrProtected
 	}

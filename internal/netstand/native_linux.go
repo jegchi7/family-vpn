@@ -341,7 +341,7 @@ func (t *pinnedTool) check() error {
 	return nil
 }
 func openTool(name, pin string) (*pinnedTool, error) {
-	if !digestValid(pin) || (name != "ip" && name != "nft" && name != "sysctl" && name != "tc") {
+	if !digestValid(pin) || (name != "ip" && name != "nft" && name != "sysctl" && name != "tc" && name != "xtables-legacy-multi") {
 		return nil, ErrInput
 	}
 	c, e := directories([]string{"usr", "sbin"}, false)
@@ -409,12 +409,15 @@ func scopeCheck(t Target) error {
 	return nil
 }
 func runTool(ctx context.Context, target Target, t *pinnedTool, args []string) ([]byte, error) {
-	if ctx.Err() != nil || scopeCheck(target) != nil || t.check() != nil {
+	if t == nil || ctx.Err() != nil || scopeCheck(target) != nil || t.check() != nil {
 		return nil, ErrInventory
 	}
 	child, cancel := context.WithTimeout(ctx, 4*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(child, "/proc/self/fd/3", args...)
+	if t.name == "xtables-legacy-multi" {
+		cmd.Args[0] = "xtables-legacy-multi"
+	}
 	cmd.ExtraFiles = []*os.File{t.file}
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "LC_ALL=C"}
 	cmd.Stdin = nil
@@ -457,31 +460,37 @@ func Prepare(ctx context.Context, i netguard.Inputs, target Target) (Summary, er
 		return Summary{}, e
 	}
 	defer clear(foreignConfig)
-	tools := map[string]*pinnedTool{}
-	for _, spec := range []struct{ name, pin string }{{"ip", target.IP_SHA256}, {"nft", target.NFT_SHA256}, {"sysctl", target.SysctlSHA256}, {"tc", target.TCSHA256}} {
-		t, e := openTool(spec.name, spec.pin)
-		if e != nil {
-			for _, t := range tools {
-				t.close()
-			}
-			return Summary{}, e
-		}
-		tools[spec.name] = t
+	tools, e := openTools(target)
+	if e != nil {
+		return Summary{}, e
 	}
-	defer func() {
-		for _, t := range tools {
-			t.close()
-		}
-	}()
+	defer closeTools(tools)
 	inventory, e := collectInventory(ctx, target, tools)
 	if e != nil {
 		return Summary{}, e
+	}
+	coexist, e := collectCoexistence(ctx, i, target, tools, inventory, nil)
+	if e != nil {
+		return Summary{}, e
+	}
+	var baseline, expected string
+	if !inventory.IPv4Forwarding {
+		preservation, e := captureForwarding(ctx, target, tools, inventory.Interfaces, i.Uplink)
+		if e != nil {
+			return Summary{}, e
+		}
+		defer preservation.close()
+		baseline, expected = preservation.baselineHash(), preservation.expectedHash()
 	}
 	p, e := netguard.Build(i, inventory)
 	if e != nil {
 		return Summary{}, ErrInventory
 	}
 	a, e := buildArtifacts(i, target, inventory, p)
+	if e != nil {
+		return Summary{}, e
+	}
+	a, _, _, e = bindEnvironment(a, coexist, baseline, expected)
 	if e != nil {
 		return Summary{}, e
 	}
@@ -498,6 +507,11 @@ func Prepare(ctx context.Context, i netguard.Inputs, target Target) (Summary, er
 		}
 	}
 	if scopeCheck(target) != nil || ctx.Err() != nil {
+		return Summary{}, ErrInventory
+	}
+	// The stage stores digests only; close policy observation before publication.
+	current, e := collectCoexistence(ctx, i, target, tools, inventory, nil)
+	if e != nil || current != coexist {
 		return Summary{}, ErrInventory
 	}
 	c, e := directories([]string{"etc", "family-vpn"}, true)

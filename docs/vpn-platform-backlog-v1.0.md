@@ -1,10 +1,10 @@
 # VPN-платформа: backlog разработки и внедрения
 
-Версия 1.23 · статусы на 8 октября 2026; исходная декомпозиция 29 сентября 2026 · Основание: `vpn-platform-spec-v1.0.md`, сохранённая спецификация 78 784 байта, прочитана перед декомпозицией.
+Версия 1.24 · статусы на 9 октября 2026; исходная декомпозиция 29 сентября 2026 · Основание: `vpn-platform-spec-v1.0.md`, сохранённая спецификация 78 784 байта, прочитана перед декомпозицией.
 
 ## 1. Как пользоваться
 
-Это snapshot исходного реестра63 задач и текущей поставки; live milestone/task tracking ведётся в Linear. **Статусы обновлены для v0.28.0; исполнители не назначены.** Исходные ID и критерии приёмки сохранены. Частичная реализация не считается Done. Роли ниже обозначают компетенции; один человек может совмещать их. Документ не запускает развёртывание, не создаёт внешние issues и не отправляет приглашения.
+Это snapshot исходного реестра63 задач и текущей поставки; live milestone/task tracking ведётся в Linear. **Статусы обновлены для v0.29.0; исполнители не назначены.** Исходные ID и критерии приёмки сохранены. Частичная реализация не считается Done. Роли ниже обозначают компетенции; один человек может совмещать их. Документ не запускает развёртывание, не создаёт внешние issues и не отправляет приглашения.
 
 Префиксы: PRE — обследование и решения; DEV — программная разработка; NET — инфраструктура и развёртывание на стенде; QA — проверка; ROL — внедрение на действующие серверы и устройства. Разработка проверок начинается вместе с функцией; отдельные QA-задачи означают интеграционную приёмку, а не откладывание тестирования до конца.
 
@@ -39,6 +39,8 @@ Live milestone/task состояние — Linear; этот файл сохра�
 08.10.2026 · v0.27: core versions генератора и installer согласованы, закрытая compatibility matrix не подтверждает runtime. User/admin отображают безопасную keyless projection последней owner/current AWG configuration metadata с TTL60s, conflict/stale/future guard; connection/client unknown. Xray API/session readbacks в HTTP не переносятся. Добавлены проверяемые GitHub prerelease build и bootstrap downloader для ручного запуска оператором; remote публикация/CI/VPS в этой локальной задаче не выполнялись. Snapshot1.22 сохраняет original63 criteria/statuses44/16/3/0 и GW8Backlog; DEV-20 реальные probes/failover не реализованы. Runbooks protocol-status-runbook.md/vpn-bootstrap-runbook.md; iteration-27.md.
 
 08.10.2026 · v0.28: по прямому запросу владельца подготовка deployment guide заменена реализацией RU ingress и сетевой изоляции. Добавлены private RU primary templates, Foreign IPv4 adapter и trusted network plan/prepare/apply/check с independently expected boot/netns/helpers, collision checks и kernel readback перед activation. Native forwarding0 требует preservation implementation; cores не запускаются, empty client ingress не выдаёт доступ. Snapshot1.23: NET-03/04/05 In progress, 41 Backlog/19 In progress/3 Verification/0 Done, original criteria/specification сохранены. Linux kernel/service/client/fail-closed acceptance открыта, к VPS не подключались. Runbook network-stand-runbook.md; iteration-28.md.
+
+09.10.2026 · v0.29: по сообщению владельца RU host forwarding0 и Foreign docker0/amn0 с Amnezia UDP30759. Реализованы current-memory/held-procfs-FD preservation с LRO/pending-feature/mixed-forwarding guards и scoped Foreign nft+legacy policy binding. Допустимый bridge NAT disjoint от transit; два точных leading accepts для owned veth идут после owned guard и до UP, свежий readback сохраняет исходную shared policy. Unknown extensions/IPv6 rewrite остаются blocked. Bootstrap tty исправлен; prepare/apply/Verify не запускают cores и не делают ready. Snapshot1.24: 41 Backlog/19 In progress/3 Verification/0 Done, original63/252 normative fields/specification сохранены. Ubuntu kernel/packet/management/recovery и Android acceptance открыты. История опубликованного владельцем v0.28 CI отделена от непубликованного v0.29; Linear не синхронизировался. ADR-0026, iteration-29.md.
 
 ## 2. Поставки и условия перехода
 
@@ -79,7 +81,7 @@ flowchart TD
 
 #### PRE-01 · Обследовать действующие RU и Foreign
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -91,7 +93,7 @@ flowchart TD
 
 #### PRE-02 · Проверить существующее аварийное восстановление
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -103,7 +105,7 @@ flowchart TD
 
 #### PRE-03 · Закрепить границы процессов и владельцев состояния
 
-**Статус v0.28.0:** In progress — ADR-0002/0006 и границы процессов реализованы локально; реальное UID/socket isolation ещё не проверено.
+**Статус v0.29.0:** In progress — ADR-0002/0006 и границы процессов реализованы локально; реальное UID/socket isolation ещё не проверено.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV+OPS
 
@@ -115,7 +117,7 @@ flowchart TD
 
 #### PRE-04 · Проверить протоколы и форматы до разработки адаптеров
 
-**Статус v0.28.0:** In progress — Официальные AmneziaWG 3.1 и Xray share-link/REALITY документы изучены; VLESS TCP/Vision и AWG3.1 client-only .conf subsets импортируются с byte-exact encrypted storage/rotation round-trip. Новые AWG fields/CPS/clamping uniqueness проверены локально в v0.14. Матрица client-format-matrix.md; native importer/handshake/реальные мобильные клиенты и доступность приложений ещё не проверены. v0.15 проверила локальный AWG readback contract; actual tool/core/client manifest и native round-trip ещё не приняты.
+**Статус v0.29.0:** In progress — Официальные AmneziaWG 3.1 и Xray share-link/REALITY документы изучены; VLESS TCP/Vision и AWG3.1 client-only .conf subsets импортируются с byte-exact encrypted storage/rotation round-trip. Новые AWG fields/CPS/clamping uniqueness проверены локально в v0.14. Матрица client-format-matrix.md; native importer/handshake/реальные мобильные клиенты и доступность приложений ещё не проверены. v0.15 проверила локальный AWG readback contract; actual tool/core/client manifest и native round-trip ещё не приняты.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV+QA
 
@@ -127,7 +129,7 @@ flowchart TD
 
 #### PRE-05 · Зафиксировать deployment inputs
 
-**Статус v0.28.0:** In progress — Owner inputs два Ubuntu20.04/~1GiB/RU кабинет/Android и closed pins Xray26.3.27/sing-box1.14.2 musl/Hysteria2.13.0 записаны; actual kernel/architecture/ports/recovery/TLS/namespace inventory и AWG compatible core ещё не приняты. Pinned binary installer и Foreign primary staging подготовлены локально, не deployment acceptance. ADR-0023, vpn-bootstrap-runbook.md.
+**Статус v0.29.0:** In progress — Owner inputs два Ubuntu20.04/~1GiB/RU кабинет/Android и closed pins Xray26.3.27/sing-box1.14.2 musl/Hysteria2.13.0 записаны; actual kernel/architecture/ports/recovery/TLS/namespace inventory и AWG compatible core ещё не приняты. Pinned binary installer и Foreign primary staging подготовлены локально, не deployment acceptance. ADR-0023, vpn-bootstrap-runbook.md.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** S · **Роль:** OPS+DEV
 
@@ -139,7 +141,7 @@ flowchart TD
 
 #### PRE-06 · Составить threat model и правила изменения состояния
 
-**Статус v0.28.0:** In progress — Trust boundaries и локальные IDOR/crypto/transaction tests есть; полный threat model и network apply ещё впереди.
+**Статус v0.29.0:** In progress — Trust boundaries и локальные IDOR/crypto/transaction tests есть; полный threat model и network apply ещё впереди.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV+QA
 
@@ -151,7 +153,7 @@ flowchart TD
 
 #### PRE-07 · Закрыть решения M0
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** S · **Роль:** DEV+OPS
 
@@ -165,7 +167,7 @@ flowchart TD
 
 #### DEV-01 · Создать репозиторий и воспроизводимую сборку
 
-**Статус v0.28.0:** Verification — Go/Svelte skeleton, locks, build и local tests работают; удалённый Git/CI run пока не выполнен.
+**Статус v0.29.0:** Verification — Go/Svelte skeleton, locks, build и local tests работают. Публичный v0.28 был опубликован владельцем; checks run37836903063 SUCCESS08.10, включая Linux race/root filesystem и browser suites. Это не native network acceptance на Ubuntu20.04. Локальный v0.29 требует собственного CI после публикации.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** S · **Роль:** DEV
 
@@ -177,7 +179,7 @@ flowchart TD
 
 #### DEV-02 · Реализовать хранилища и миграции
 
-**Статус v0.28.0:** In progress — Portal v6, control v4, admin v1; migration и persistence tests есть. UID isolation остаётся открытой.
+**Статус v0.29.0:** In progress — Portal v6, control v4, admin v1; migration и persistence tests есть. UID isolation остаётся открытой.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -189,7 +191,7 @@ flowchart TD
 
 #### DEV-03 · Определить OpenAPI и agent schemas
 
-**Статус v0.28.0:** In progress — Implemented OpenAPI/TS для local auth, admin MFA и device requests; v0.27 добавляет safe ProfileDiagnostics projection, connection/client unknown, no control/tool/network boundary. Полный admin/agent contract впереди.
+**Статус v0.29.0:** In progress — Implemented OpenAPI/TS для local auth, admin MFA и device requests; v0.27 добавляет safe ProfileDiagnostics projection, connection/client unknown, no control/tool/network boundary. Полный admin/agent contract впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -201,7 +203,7 @@ flowchart TD
 
 #### DEV-04 · Реализовать приглашения и серверные сессии
 
-**Статус v0.28.0:** Verification — Invites, sessions, expiry/idle/logout/CSRF/rate limits и recovery проверены локально; production origin/proxy QA-01 впереди.
+**Статус v0.29.0:** Verification — Invites, sessions, expiry/idle/logout/CSRF/rate limits и recovery проверены локально; production origin/proxy QA-01 впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -213,7 +215,7 @@ flowchart TD
 
 #### DEV-05 · Реализовать passkey, пароль, MFA и recovery
 
-**Статус v0.28.0:** In progress — Password, user recovery, admin TOTP и console reset готовы. WebAuthn/recovery codes/fresh auth отложены за текущий семейный MVP по решению владельца 30.09; исходная задача целиком не закрыта.
+**Статус v0.29.0:** In progress — Password, user recovery, admin TOTP и console reset готовы. WebAuthn/recovery codes/fresh auth отложены за текущий семейный MVP по решению владельца 30.09; исходная задача целиком не закрыта.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** L · **Роль:** DEV
 
@@ -225,7 +227,7 @@ flowchart TD
 
 #### DEV-06 · Реализовать пользователей, устройства и ownership
 
-**Статус v0.28.0:** In progress — v0.6: заявки на устройства, owner-scoped rename/cancel, лимит, idempotency и revision conflicts. IP allocation, admin lifecycle и сетевой revoke ещё впереди.
+**Статус v0.29.0:** In progress — v0.6: заявки на устройства, owner-scoped rename/cancel, лимит, idempotency и revision conflicts. IP allocation, admin lifecycle и сетевой revoke ещё впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -237,7 +239,7 @@ flowchart TD
 
 #### DEV-07 · Реализовать encrypted profile store
 
-**Статус v0.28.0:** Verification — AES-256-GCM, AAD owner/device/profile/protocol/generation/format, отдельный purpose-tagged key, nonce uniqueness и атомарная ротация проверены локально. CLI init/check/rotate и VLESS/AWG importers подключены; production UID/backup-restore и verified download ещё впереди.
+**Статус v0.29.0:** Verification — AES-256-GCM, AAD owner/device/profile/protocol/generation/format, отдельный purpose-tagged key, nonce uniqueness и атомарная ротация проверены локально. CLI init/check/rotate и VLESS/AWG importers подключены; production UID/backup-restore и verified download ещё впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -249,7 +251,7 @@ flowchart TD
 
 #### DEV-08 · Сделать доверенный CLI импорта существующих профилей
 
-**Статус v0.28.0:** In progress — Trusted CLI profile-targets/import, read-only dry-run, explicit apply, VLESS/REALITY URI validator, binding/conflicts/replay и UUID exclusivity готовы локально. Full-access wrappers отвергаются; В v0.9 добавлена read-only сверка с pinned Xray snapshot; v0.14 добавила AWG3.1 client-only .conf allowlist, все новые поля, original bytes, public-key uniqueness/clamping, CLI dry-run/apply и rollback/rekey tests. v0.15 добавила bounded AWG readback/parser, fixed pinned Linux read-only adapter, immutable scoped TTL60s result и atomic metadata/audit без ready/installed_revision. v0.16 добавила keyless read-only readiness report: current binding, latest scoped observation/TTL/source, explicit blockers, no ready/client/secret proof; новые conflict не скрываются older match. v0.17 исправила AWG comparison: selected AdvancedSecurity off/missing conflict, symmetric omitted boolean modes, bounded hex FwMark readback, общий safe vocabulary и полный17-field conflict через ledger/readiness. v0.18 добавила trusted readiness candidate и writer-fenced recheck: repeat AEAD/format/uniqueness/current binding/exact bytes/TTL, opaque JSON, pending installed_revision rejection; после recheck fence освобождён, permission/lease/ready отсутствуют. v0.19 добавила partial Xray named-users observer: closed parser, fixed pinned loopback CLI, normalized double read, immutable current binding/exact bytes/target/TTL и repeat storage guards read-only. UUID wire aliases bytes6/7 резервируются консервативно; exact export unchanged. Enumeration/core identity/revision/transport/client/ready не подтверждены; отсутствие unobserved, output blocked/exit1. Native positive runtime/client evidence и audited readiness transition открыты (KUK-5, milestone-m1.md). v0.22 связывает partial Xray readback с independent boot/netns scope на locked thread, общий runtimeenv сохраняет AWG guards; execution_scope_bound не core/client/readiness attestation. v0.23 добавляет fixed protected Xray inventory, independent exact-byte pin и повторные scope/manifest guards; ожидаемые core/config/version labels не runtime attestation. v0.25 добавляет отдельный read-only AWG selected-peer session result/CLI с handshake/counter activity и повторными current storage guards; runtime/client/DNS/routing/ready false, no configuration ledger или state writes.
+**Статус v0.29.0:** In progress — Trusted CLI profile-targets/import, read-only dry-run, explicit apply, VLESS/REALITY URI validator, binding/conflicts/replay и UUID exclusivity готовы локально. Full-access wrappers отвергаются; В v0.9 добавлена read-only сверка с pinned Xray snapshot; v0.14 добавила AWG3.1 client-only .conf allowlist, все новые поля, original bytes, public-key uniqueness/clamping, CLI dry-run/apply и rollback/rekey tests. v0.15 добавила bounded AWG readback/parser, fixed pinned Linux read-only adapter, immutable scoped TTL60s result и atomic metadata/audit без ready/installed_revision. v0.16 добавила keyless read-only readiness report: current binding, latest scoped observation/TTL/source, explicit blockers, no ready/client/secret proof; новые conflict не скрываются older match. v0.17 исправила AWG comparison: selected AdvancedSecurity off/missing conflict, symmetric omitted boolean modes, bounded hex FwMark readback, общий safe vocabulary и полный17-field conflict через ledger/readiness. v0.18 добавила trusted readiness candidate и writer-fenced recheck: repeat AEAD/format/uniqueness/current binding/exact bytes/TTL, opaque JSON, pending installed_revision rejection; после recheck fence освобождён, permission/lease/ready отсутствуют. v0.19 добавила partial Xray named-users observer: closed parser, fixed pinned loopback CLI, normalized double read, immutable current binding/exact bytes/target/TTL и repeat storage guards read-only. UUID wire aliases bytes6/7 резервируются консервативно; exact export unchanged. Enumeration/core identity/revision/transport/client/ready не подтверждены; отсутствие unobserved, output blocked/exit1. Native positive runtime/client evidence и audited readiness transition открыты (KUK-5, milestone-m1.md). v0.22 связывает partial Xray readback с independent boot/netns scope на locked thread, общий runtimeenv сохраняет AWG guards; execution_scope_bound не core/client/readiness attestation. v0.23 добавляет fixed protected Xray inventory, independent exact-byte pin и повторные scope/manifest guards; ожидаемые core/config/version labels не runtime attestation. v0.25 добавляет отдельный read-only AWG selected-peer session result/CLI с handshake/counter activity и повторными current storage guards; runtime/client/DNS/routing/ready false, no configuration ledger или state writes.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -261,7 +263,7 @@ flowchart TD
 
 #### DEV-09 · Реализовать выдачу, QR и импорт в клиент
 
-**Статус v0.28.0:** In progress — Owner-scoped demo download и запрет pending выдачи; imported-pending UI без URI/UUID/pbk работает. Verified real download/QR/client round-trip ещё впереди.
+**Статус v0.29.0:** In progress — Owner-scoped demo download и запрет pending выдачи; imported-pending UI без URI/UUID/pbk работает. Verified real download/QR/client round-trip ещё впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -273,7 +275,7 @@ flowchart TD
 
 #### DEV-10 · Создать движок инструкций и каталог клиентов
 
-**Статус v0.28.0:** In progress — В v0.11 готовы embedded versioned каталог, ручной выбор 6 ОС, проверенный portal workflow scope и downloadable self-contained HTML. Client app/format guides явно draft; реальные версии/установка/round-trip ещё впереди.
+**Статус v0.29.0:** In progress — В v0.11 готовы embedded versioned каталог, ручной выбор 6 ОС, проверенный portal workflow scope и downloadable self-contained HTML. Client app/format guides явно draft; реальные версии/установка/round-trip ещё впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -285,7 +287,7 @@ flowchart TD
 
 #### DEV-11 · Собрать пользовательский вертикальный сценарий
 
-**Статус v0.28.0:** In progress — Invitation/login/recovery → заявка устройства → versioned guide/offline download, responsive UI. v0.27 добавляет visual configuration/status/TTL cards, latest negative wins; online/client verification не заявляются. Реальная выдача профиля и проверка на клиенте ещё впереди.
+**Статус v0.29.0:** In progress — Invitation/login/recovery → заявка устройства → versioned guide/offline download, responsive UI. v0.27 добавляет visual configuration/status/TTL cards, latest negative wins; online/client verification не заявляются. Реальная выдача профиля и проверка на клиенте ещё впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -297,7 +299,7 @@ flowchart TD
 
 #### DEV-12 · Собрать закрытую админку M1
 
-**Статус v0.28.0:** In progress — Закрытый local admin password+TOTP, read-only overview; В v0.10 готовы read-only users, invitation/recovery states, device/import queue и safe audit UI с bounded keyset pagination. v0.27 те же безопасные metadata/status cards читаются только authenticated management listener, без ключей/control/socket. Issuance/mutations остаются CLI; production management isolation ещё не принято.
+**Статус v0.29.0:** In progress — Закрытый local admin password+TOTP, read-only overview; В v0.10 готовы read-only users, invitation/recovery states, device/import queue и safe audit UI с bounded keyset pagination. v0.27 те же безопасные metadata/status cards читаются только authenticated management listener, без ключей/control/socket. Issuance/mutations остаются CLI; production management isolation ещё не принято.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -309,7 +311,7 @@ flowchart TD
 
 #### DEV-13 · Реализовать read-only состояние и аудит
 
-**Статус v0.28.0:** In progress — Read-only overview/freshness и транзакционные auth/device audit events; В v0.10 готов safe paginated audit view с allowlist и корректной time/id сортировкой; v0.27 показывает last safe configuration metadata/TTL/source category, без raw mismatch/IDs/values; retention и реальные probe результаты ещё впереди.
+**Статус v0.29.0:** In progress — Read-only overview/freshness и транзакционные auth/device audit events; В v0.10 готов safe paginated audit view с allowlist и корректной time/id сортировкой; v0.27 показывает last safe configuration metadata/TTL/source category, без raw mismatch/IDs/values; retention и реальные probe результаты ещё впереди.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -321,7 +323,7 @@ flowchart TD
 
 #### DEV-14 · Создать ограниченный API намерений и agent transport
 
-**Статус v0.28.0:** In progress — Strict bounded synthetic envelope и Linux Unix/SO_PEERCRED transport написаны; no HTTP/control access в public. AF_UNIX tests SKIP из-за EPERM текущей среды; разные production UID и public intent bridge ещё не приняты.
+**Статус v0.29.0:** In progress — Strict bounded synthetic envelope и Linux Unix/SO_PEERCRED transport написаны; no HTTP/control access в public. AF_UNIX tests SKIP из-за EPERM текущей среды; разные production UID и public intent bridge ещё не приняты.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -333,7 +335,7 @@ flowchart TD
 
 #### DEV-15 · Реализовать очередь и reconciler
 
-**Статус v0.28.0:** In progress — v0.12 durable fake queue/reconcile; v0.13 bounded foreground worker, persisted2..60s retry, graceful shutdown, queued-only Ensure cancellation и safe CLI operation pages проверены. Независимый actual observer, HTTP integration и real network crash/rollback ещё впереди.
+**Статус v0.29.0:** In progress — v0.12 durable fake queue/reconcile; v0.13 bounded foreground worker, persisted2..60s retry, graceful shutdown, queued-only Ensure cancellation и safe CLI operation pages проверены. Независимый actual observer, HTTP integration и real network crash/rollback ещё впереди.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** L · **Роль:** DEV
 
@@ -345,7 +347,7 @@ flowchart TD
 
 #### DEV-16 · Реализовать AWG 3.1 adapter
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** L · **Роль:** DEV
 
@@ -357,7 +359,7 @@ flowchart TD
 
 #### DEV-17 · Реализовать Xray adapter
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** L · **Роль:** DEV
 
@@ -369,7 +371,7 @@ flowchart TD
 
 #### DEV-18 · Реализовать ревизии и безопасное восстановление
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** L · **Роль:** DEV
 
@@ -381,7 +383,7 @@ flowchart TD
 
 #### DEV-19 · Подключить создание, ротацию и отзыв к UI
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -393,7 +395,7 @@ flowchart TD
 
 #### DEV-20 · Реализовать Foreign probe и браузерную проверку
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M3 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -405,7 +407,7 @@ flowchart TD
 
 #### DEV-21 · Реализовать проверки путей и controller
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M3 · **Приоритет:** P0 · **Размер:** L · **Роль:** DEV
 
@@ -417,7 +419,7 @@ flowchart TD
 
 #### DEV-22 · Реализовать временный manual override
 
-**Статус v0.28.0:** Backlog — Временный manual override ещё не реализован. Audit events относятся к DEV-13, а не к DEV-22; эта привязка исправляет неточность старых iteration reports.
+**Статус v0.29.0:** Backlog — Временный manual override ещё не реализован. Audit events относятся к DEV-13, а не к DEV-22; эта привязка исправляет неточность старых iteration reports.
 
 **Этап:** M3 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -429,7 +431,7 @@ flowchart TD
 
 #### DEV-23 · Завершить диагностику и локальные алерты
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M3 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -441,7 +443,7 @@ flowchart TD
 
 #### DEV-24 · Добавить подписки для подтвержденных клиентов
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** POST · **Приоритет:** P2 · **Размер:** M · **Роль:** DEV
 
@@ -453,7 +455,7 @@ flowchart TD
 
 #### DEV-25 · Реализовать backup/restore CLI
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV+OPS
 
@@ -465,7 +467,7 @@ flowchart TD
 
 #### DEV-26 · Завершить hardening web/API
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** DEV
 
@@ -479,7 +481,7 @@ flowchart TD
 
 #### NET-01 · Создать воспроизводимый изолированный стенд
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -491,7 +493,7 @@ flowchart TD
 
 #### NET-02 · Подготовить management transport на стенде
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -503,7 +505,7 @@ flowchart TD
 
 #### NET-03 · Собрать RU namespaces и защитную сеть
 
-**Статус v0.28.0:** In progress — v0.28 реализует closed IPv4 vpn-data/veth план и protected operator CLI: fresh pinned host inventory, semantic owned nft readback до activation, scoped SNAT/DNAT, current+original tuple guards, IPv6/DNS/private/metadata/management deny и failure journal без удаления защиты. Baseline forwarding0 блокируется до записи; unowned rewrites/offload и конфликты topology запрещены. Windows synthetic/static checks не заменяют Linux network/boot/recovery/AWG/TUN/QA-02 acceptance; network-stand-runbook.md.
+**Статус v0.29.0:** In progress — Closed IPv4 vpn-data/veth plan и protected CLI сохраняют current+original tuple/kernel isolation. v0.29 добавляет checked forwarding0→1 current-memory/held-FD preservation: original all.accept_redirects/default.forwarding/unrelated interface.forwarding восстанавливаются, uplink/owned veth получают forwarding1. LRO requested/active, pending mutable features, mixed existing forwarding и unknown32-key devconf extensions блокируются до writes. Safe manifest fingerprints не дают restoration authority, crash journal не replay. Real Linux network/management/boot/recovery/AWG/TUN/QA-02 acceptance открыта; network-stand-runbook.md.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** L · **Роль:** OPS
 
@@ -515,7 +517,7 @@ flowchart TD
 
 #### NET-04 · Добавить RU REALITY вход
 
-**Статус v0.28.0:** In progress — v0.28 готовит private RU Xray REALITY ingress → loopback SOCKS sing-box → Foreign; REALITY camouflage использует fixed loopback TCP relay через тот же Foreign, DIRECT outbound отсутствует. Empty clients до trusted vault/current-profile binding, bounded native syntax-only checks и pure validated-client binder не являются issuance, running core/client/ready. Linux unprivileged runtime, TCP/UDP/DNS и Android round-trip ещё открыты; network-stand-runbook.md.
+**Статус v0.29.0:** In progress — v0.28 готовит private RU Xray REALITY ingress → loopback SOCKS sing-box → Foreign; REALITY camouflage использует fixed loopback TCP relay через тот же Foreign, DIRECT outbound отсутствует. Empty clients до trusted vault/current-profile binding, bounded native syntax-only checks и pure validated-client binder не являются issuance, running core/client/ready. Linux unprivileged runtime, TCP/UDP/DNS и Android round-trip ещё открыты; network-stand-runbook.md.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -527,7 +529,7 @@ flowchart TD
 
 #### NET-05 · Собрать Foreign primary/backup и egress policy
 
-**Статус v0.28.0:** In progress — Foreign private primary staging и strict IPv4 namespace adapter сохраняют original exact pair/credentials. Closed kernel egress guard запрещает private/reserved/metadata/local/RU+Foreign management destinations, включая original/current tuples после NAT; DNS IPv4 only. Baseline source bytes не перезаписываются. Реальные Foreign runtime/DNS/IPv6/restart/failure проверки и Hysteria backup/TLS не приняты; network-stand-runbook.md.
+**Статус v0.29.0:** In progress — Foreign private primary/IPv4 adapter и actual/original tuple egress deny сохраняют original source bytes. v0.29 scoped nft+both legacy-family readback допускает только положительный disjoint bridge source NAT и LOCAL-reachable UDP30759 DNAT в docker0/amn0 subset. Два точных shared FORWARD accepts для owned veth проверяются вместе с independent owned nft guard и unchanged semantic policy; fixed optional legacy helper, no Docker API/socket, no flush/policy change. Opaque nft xt/IPv6 NAT/unknown rewrite блокируются. Owner-reported Amnezia container не является actual firewall acceptance. Foreign runtime/DNS/IPv6/restart/failure и Hysteria backup/TLS не приняты; network-stand-runbook.md.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** L · **Роль:** OPS
 
@@ -539,7 +541,7 @@ flowchart TD
 
 #### NET-06 · Настроить TLS, публичный портал и закрытый origin
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -551,7 +553,7 @@ flowchart TD
 
 #### NET-07 · Собрать units, permissions и boot order
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -563,7 +565,7 @@ flowchart TD
 
 #### NET-08 · Настроить backup job и внешнее хранение
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -575,7 +577,7 @@ flowchart TD
 
 #### NET-09 · Собрать release bundle и deployment automation
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS+DEV
 
@@ -587,7 +589,7 @@ flowchart TD
 
 #### NET-10 · Опционально объединить HTTPS и REALITY на TCP443
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** POST · **Приоритет:** P2 · **Размер:** L · **Роль:** OPS
 
@@ -601,7 +603,7 @@ flowchart TD
 
 #### QA-01 · Проверить auth и границы доступа
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** QA+DEV
 
@@ -613,7 +615,7 @@ flowchart TD
 
 #### QA-02 · Доказать fail-closed и изоляцию egress
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M0 · **Приоритет:** P0 · **Размер:** L · **Роль:** QA+OPS
 
@@ -625,7 +627,7 @@ flowchart TD
 
 #### QA-03 · Проверить кабинет M1
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M1 · **Приоритет:** P0 · **Размер:** M · **Роль:** QA
 
@@ -637,7 +639,7 @@ flowchart TD
 
 #### QA-04 · Проверить изменения и аварийный reconcile
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M2 · **Приоритет:** P0 · **Размер:** L · **Роль:** QA+DEV
 
@@ -649,7 +651,7 @@ flowchart TD
 
 #### QA-05 · Проверить failover и anti-flapping
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M3 · **Приоритет:** P0 · **Размер:** M · **Роль:** QA+OPS
 
@@ -661,7 +663,7 @@ flowchart TD
 
 #### QA-06 · Проверить пользовательскую диагностику
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M3 · **Приоритет:** P0 · **Размер:** M · **Роль:** QA
 
@@ -673,7 +675,7 @@ flowchart TD
 
 #### QA-07 · Проверить реальные iOS/Android/Windows клиенты
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** L · **Роль:** QA+USER
 
@@ -685,7 +687,7 @@ flowchart TD
 
 #### QA-08 · Проверить секреты и web hardening
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** QA+DEV
 
@@ -697,7 +699,7 @@ flowchart TD
 
 #### QA-09 · Измерить ресурсы и задержки
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** QA+OPS
 
@@ -709,7 +711,7 @@ flowchart TD
 
 #### QA-10 · Провести полное восстановление
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** L · **Роль:** QA+OPS
 
@@ -721,7 +723,7 @@ flowchart TD
 
 #### QA-11 · Проверить reboot, upgrade и rollback
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** QA+OPS
 
@@ -733,7 +735,7 @@ flowchart TD
 
 #### QA-12 · Собрать acceptance report и gate G4
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** S · **Роль:** QA+OPS
 
@@ -747,7 +749,7 @@ flowchart TD
 
 #### ROL-01 · Подготовить план переноса и офлайн-набор
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS+USER
 
@@ -759,7 +761,7 @@ flowchart TD
 
 #### ROL-02 · Развернуть release candidate на production
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -771,7 +773,7 @@ flowchart TD
 
 #### ROL-03 · Принять существующие устройства под управление
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS+DEV
 
@@ -783,7 +785,7 @@ flowchart TD
 
 #### ROL-04 · Провести пилот на 1–2 устройствах
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS+USER
 
@@ -795,7 +797,7 @@ flowchart TD
 
 #### ROL-05 · Принять решение о расширении пилота
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** S · **Роль:** OPS+QA
 
@@ -807,7 +809,7 @@ flowchart TD
 
 #### ROL-06 · Подключить остальных пользователей волнами
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS+USER
 
@@ -819,7 +821,7 @@ flowchart TD
 
 #### ROL-07 · Завершить миграцию и передать эксплуатацию
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** M · **Роль:** OPS
 
@@ -831,7 +833,7 @@ flowchart TD
 
 #### ROL-08 · Закрыть внедрение после наблюдения
 
-**Статус v0.28.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
+**Статус v0.29.0:** Backlog — Результат исходной задачи пока не реализован и не принят.
 
 **Этап:** M4 · **Приоритет:** P0 · **Размер:** S · **Роль:** OPS+USER
 

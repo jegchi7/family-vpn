@@ -18,11 +18,11 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm run setup
       - run: npm run check
-      - name: Protected installer and Foreign filesystem boundaries
+      - name: Protected installer and network filesystem boundaries
         # Synthetic temp-directory tests only; no core/service/network activation.
         run: |
           bootstrap_go_executable="$(command -v go)"
-          sudo env GOTOOLCHAIN=local GOMODCACHE="$(go env GOMODCACHE)" GOCACHE="$RUNNER_TEMP/fvpn-root-go-build" "$bootstrap_go_executable" test -race ./internal/coreinstall ./internal/foreignsetup -run 'Test(Linux|PrivateStage|StageCancelled)'
+          sudo env GOTOOLCHAIN=local GOMODCACHE="$(go env GOMODCACHE)" GOCACHE="$RUNNER_TEMP/fvpn-root-go-build" "$bootstrap_go_executable" test -race ./internal/coreinstall ./internal/foreignsetup ./internal/rusetup ./internal/netstand -run 'Test(Linux|PrivateStage|StageCancelled|RUPrivateStage|RUStage|ProtectedStage|CancelledStage|Operation|ForwardingProc|ForwardingReadOnly)'
       - run: npm run build
       - run: npm run test:persistence
       - run: npm run test:intents

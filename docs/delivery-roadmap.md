@@ -25,6 +25,7 @@
 | v0.26 | Pinned static core installer, private Foreign REALITY staging и operator wrapper | iteration-26 (AWG/kernel isolation/runtime/Android acceptance open) |
 | v0.27 | Общие core versions, safe visual protocol status/TTL, GitHub prerelease bootstrap | iteration-27 (Linux/network/session/client/transition acceptance open) |
 | v0.28 | RU ingress/loopback relay, Foreign IPv4 adapter, closed kernel guard plan/native apply/readback code | iteration-28 (native Linux, forwarding0 preservation, unprivileged runtime/current client binding/acceptance open) |
+| v0.29 | Forwarding0 current-memory/held-FD preservation, scoped Foreign bridge NAT/leading FORWARD rules, Foreign tty fix | iteration-29 (Ubuntu packet/management/recovery, unprivileged launcher, client binding/Android acceptance open) |
 | v0.22 | KUK-5 Xray execution scope/shared AWG-Xray proc reader | iteration-22 (native/core/client/transition acceptance still open) |
 | v0.21 | KUK-5 independently scoped AWG runtime target/boot/netns | iteration-21 (native/core/client/transition acceptance still open) |
 | v0.18 | KUK-5/M1-02 trusted readiness preparation/writer-fenced recheck | iteration-18 (actual client/transition/native acceptance pending) |

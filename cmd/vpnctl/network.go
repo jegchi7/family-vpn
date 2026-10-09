@@ -18,7 +18,7 @@ func runNetwork(command string, args []string) error { return runNetworkTo(comma
 func runNetworkTo(command string, args []string, out io.Writer) error {
 	f := flag.NewFlagSet(command, flag.ContinueOnError)
 	f.SetOutput(io.Discard)
-	var role, ru, foreign, host, transit, uplink, boot, ip, nft, sysctl, tc string
+	var role, ru, foreign, host, transit, uplink, boot, ip, nft, sysctl, tc, xtLegacy string
 	var device, inode uint64
 	var apply, native bool
 	switch command {
@@ -39,6 +39,7 @@ func runNetworkTo(command string, args []string, out io.Writer) error {
 	f.StringVar(&nft, "nft-sha256", "", "Independent protected fixed nft helper pin")
 	f.StringVar(&sysctl, "sysctl-sha256", "", "Independent protected fixed sysctl helper pin")
 	f.StringVar(&tc, "tc-sha256", "", "Independent protected fixed tc helper pin")
+	f.StringVar(&xtLegacy, "xtables-legacy-sha256", "", "Foreign-only independent fixed legacy multicall helper pin")
 	if command == "network-prepare" || command == "network-apply" {
 		f.BoolVar(&apply, "apply", false, "Apply requested operator-only operation")
 	}
@@ -69,7 +70,7 @@ func runNetworkTo(command string, args []string, out io.Writer) error {
 			hostIP, e3 := netip.ParseAddr(host)
 			prefix, e4 := netip.ParsePrefix(transit)
 			i := netguard.Inputs{Role: role, RUIPv4: ruIP, ForeignIPv4: foreignIP, HostPublicIPv4: hostIP, Transit: prefix, Uplink: uplink}
-			t := netstand.Target{Scope: runtimeenv.Scope{BootID: boot, NetNSDevice: device, NetNSInode: inode}, IP_SHA256: ip, NFT_SHA256: nft, SysctlSHA256: sysctl, TCSHA256: tc}
+			t := netstand.Target{Scope: runtimeenv.Scope{BootID: boot, NetNSDevice: device, NetNSInode: inode}, IP_SHA256: ip, NFT_SHA256: nft, SysctlSHA256: sysctl, TCSHA256: tc, XTLegacySHA256: xtLegacy}
 			if e1 != nil || e2 != nil || e3 != nil || e4 != nil || netguard.ValidateInputs(i) != nil {
 				cause = netstand.ErrInput
 			} else if !apply && !native {

@@ -1,4 +1,8 @@
-# Следующая итерация после v0.28.0
+# Следующая итерация после v0.29.0
+
+## Текущий срез · v0.29
+
+Реализованы локальные forwarding0 preservation и Foreign Docker/Amnezia closed subset: current memory/held procfs FD, LRO/offload guards, fresh nft+legacy policy binding и два точных leading shared FORWARD accepts для owned veth. Native Ubuntu kernel/packet/management/recovery acceptance этим не завершена; неизвестные nft xt statements, IPv6 rewrite, kernel extensions и offload остаются blocker. Foreign bootstrap использует read-only unbuffered controlling terminal, чтобы не падать на non-seekable tty. Следующий кодовый срез — dedicated unprivileged core runtime с повторной guard проверкой перед start/restart и boot ordering; далее trusted vault/current-profile writer-fenced issuance и actual Android round-trip. Ready/download не включать по staged bytes или kernel readback. Snapshot1.24 сохраняет original63 criteria/statuses41/19/3/0; схемы6/4/1 unchanged. VPS/GitHub publication/Linear из этой задачи не изменялись. Отчёт iteration-29.md, ADR-0026.
 
 ## RU ingress и isolation · v0.28
 
